@@ -105,6 +105,7 @@ public class CategoryServiceImpl implements CategoryService {
                         } else {
                             return CafeUtils.getResponseEntity("Email already exist. ", HttpStatus.CONFLICT);
                         }
+
                     } else {
                         CafeUtils.getResponseEntity("Category id doesn't exist", HttpStatus.OK);
                     }
