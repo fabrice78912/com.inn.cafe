@@ -98,8 +98,6 @@ public class CategoryServiceImpl implements CategoryService {
                 if (validateCategoryMap(requestMap, true)) {
                     Optional optional = categoryDao.findById(Integer.parseInt(requestMap.get("id")));
                     if (!optional.isEmpty()) {
-
-
                         Category category = categoryDao.findByName(requestMap.get("name"));
                         if (Objects.isNull(category)) {
                             categoryDao.save(getCategoryFromMap(requestMap, false));
@@ -108,9 +106,6 @@ public class CategoryServiceImpl implements CategoryService {
                             return CafeUtils.getResponseEntity("Email already exist. ", HttpStatus.CONFLICT);
                         }
 
-
-                        /*categoryDao.save(getCategoryFromMap(requestMap, true));
-                        return CafeUtils.getResponseEntity("Category updated successfully", HttpStatus.OK);*/
                     } else {
                         CafeUtils.getResponseEntity("Category id doesn't exist", HttpStatus.OK);
                     }
