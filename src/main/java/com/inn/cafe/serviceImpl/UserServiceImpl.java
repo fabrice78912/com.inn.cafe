@@ -28,7 +28,7 @@ import java.util.*;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
    // @Autowired
