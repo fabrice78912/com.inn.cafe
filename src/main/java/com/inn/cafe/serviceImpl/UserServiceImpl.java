@@ -31,25 +31,25 @@ import java.util.*;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-   // @Autowired
+
     private final UserDao userDao;
 
-    //@Autowired
+
     private final AuthenticationManager authenticationManager;
 
-    //@Autowired
+
     private final CustomerUsersDetailsService customerUsersDetailsService;
 
-    //@Autowired
+
     private final JWTUtils jwtUtils;
 
-    //@Autowired
+
     private final JwtFilter jwtFilter;
 
-    //@Autowired
+
     private final EmailUtils emailUtils;
 
-    //@Autowired(required = true)
+
     private final UserMapper userMapper;
 
 
