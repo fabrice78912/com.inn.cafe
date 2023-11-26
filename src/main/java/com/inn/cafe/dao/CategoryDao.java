@@ -10,6 +10,6 @@ public interface CategoryDao extends JpaRepository<Category, Integer> {
 
     Category findByName(String name);
 
-
     List<Category> findAllByNameOrderByNameAsc(String name);
+
 }
