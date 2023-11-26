@@ -13,10 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -36,8 +33,13 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             if (jwtFilter.isAdmin()) { // check if current user is Admin
                 if (validateCategoryMap(requestMap, false)) {
-                    categoryDao.save(getCategoryFromMap(requestMap, false));
-                    return CafeUtils.getResponseEntity("Category added successfully!!", HttpStatus.OK);
+                    Category category = categoryDao.findByName(requestMap.get("name"));
+                    if (Objects.isNull(category)) {
+                        categoryDao.save(getCategoryFromMap(requestMap, false));
+                        return CafeUtils.getResponseEntity("Category added successfully!!", HttpStatus.OK);
+                    } else {
+                        return CafeUtils.getResponseEntity("Email already exist. ", HttpStatus.CONFLICT);
+                    }
                 }
             } else {
                 return CafeUtils.getResponseEntity(CafeConstants.UNAUTHORIZED_ACCESS, HttpStatus.UNAUTHORIZED);
@@ -96,8 +98,19 @@ public class CategoryServiceImpl implements CategoryService {
                 if (validateCategoryMap(requestMap, true)) {
                     Optional optional = categoryDao.findById(Integer.parseInt(requestMap.get("id")));
                     if (!optional.isEmpty()) {
-                        categoryDao.save(getCategoryFromMap(requestMap, true));
-                        return CafeUtils.getResponseEntity("Category updated successfully", HttpStatus.OK);
+
+
+                        Category category = categoryDao.findByName(requestMap.get("name"));
+                        if (Objects.isNull(category)) {
+                            categoryDao.save(getCategoryFromMap(requestMap, false));
+                            return CafeUtils.getResponseEntity("Category updated successfully !!", HttpStatus.OK);
+                        } else {
+                            return CafeUtils.getResponseEntity("Email already exist. ", HttpStatus.CONFLICT);
+                        }
+
+
+                        /*categoryDao.save(getCategoryFromMap(requestMap, true));
+                        return CafeUtils.getResponseEntity("Category updated successfully", HttpStatus.OK);*/
                     } else {
                         CafeUtils.getResponseEntity("Category id doesn't exist", HttpStatus.OK);
                     }

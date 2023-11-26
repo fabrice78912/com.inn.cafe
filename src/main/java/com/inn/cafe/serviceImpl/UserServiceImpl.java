@@ -28,18 +28,15 @@ import java.util.*;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
 
     private final UserDao userDao;
 
-
     private final AuthenticationManager authenticationManager;
 
-
     private final CustomerUsersDetailsService customerUsersDetailsService;
-
 
     private final JWTUtils jwtUtils;
 
@@ -108,7 +105,6 @@ public class UserServiceImpl implements UserService {
                             , requestMap.get("password")));
 
             log.info("Authenticated {}", auth);
-
             if (auth.isAuthenticated()) {
                 if (customerUsersDetailsService.getUserDetail().getStatus().equalsIgnoreCase("true")) {
                     return new ResponseEntity<String>("{\"token\":\"" +
@@ -214,6 +210,4 @@ public class UserServiceImpl implements UserService {
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
-
-
 }

@@ -22,4 +22,6 @@ public interface ProductMapper {
     Product dtoToEntity(ProductWrapper dto);
 
     List<Product> listDtoToEntities(List<ProductWrapper> listDto);
+
+    Product findByName(String email);
 }
