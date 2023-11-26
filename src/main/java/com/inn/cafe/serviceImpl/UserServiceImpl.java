@@ -28,7 +28,7 @@ import java.util.*;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
 
@@ -36,11 +36,13 @@ public class UserServiceImpl implements UserService {
 
     private final AuthenticationManager authenticationManager;
 
+
     private final CustomerUsersDetailsService customerUsersDetailsService;
+
 
     private final JWTUtils jwtUtils;
 
-
+  
     private final JwtFilter jwtFilter;
 
 
