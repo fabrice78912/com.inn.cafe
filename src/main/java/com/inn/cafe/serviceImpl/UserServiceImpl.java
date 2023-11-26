@@ -7,10 +7,12 @@ import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.User;
 import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.dao.UserDao;
+import com.inn.cafe.mapper.UserMapper;
 import com.inn.cafe.service.UserService;
 import com.inn.cafe.utils.CafeUtils;
 import com.inn.cafe.utils.EmailUtils;
 import com.inn.cafe.wrapper.UserWrapper;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,29 +28,29 @@ import java.util.*;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserDao userDao;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final UserDao userDao;
 
-    @Autowired
-    private CustomerUsersDetailsService customerUsersDetailsService;
 
-    @Autowired
-    private JWTUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private JwtFilter jwtFilter;
 
-    @Autowired
-    private EmailUtils emailUtils;
+    private final CustomerUsersDetailsService customerUsersDetailsService;
 
-  /*  @Autowired(required = true)
-    private UserMapper userMapper;*/
+
+    private final JWTUtils jwtUtils;
+
+
+    private final JwtFilter jwtFilter;
+
+
+    private final EmailUtils emailUtils;
+
+
+    private final UserMapper userMapper;
 
 
     @Override
@@ -129,8 +131,8 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<List<UserWrapper>> getAllUser() {
         try {
             if (jwtFilter.isAdmin()) {
-                //return new ResponseEntity<>(userMapper.listEntityToListDto(userDao.findByRole("user")), HttpStatus.OK);
-                return new ResponseEntity<>(userDao.getAllUser(), HttpStatus.OK);
+                return new ResponseEntity<>(userMapper.listEntityToListDto(userDao.findByRole("user")), HttpStatus.OK);
+                //return new ResponseEntity<>(userDao.getAllUser(), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(new ArrayList<>(), HttpStatus.UNAUTHORIZED);
             }
