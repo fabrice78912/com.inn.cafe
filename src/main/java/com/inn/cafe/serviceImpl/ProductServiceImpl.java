@@ -3,6 +3,7 @@ package com.inn.cafe.serviceImpl;
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Category;
 import com.inn.cafe.POJO.Product;
+import com.inn.cafe.POJO.User;
 import com.inn.cafe.wrapper.ProductWrapper;
 import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.dao.ProductDao;
@@ -16,10 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 @Service
