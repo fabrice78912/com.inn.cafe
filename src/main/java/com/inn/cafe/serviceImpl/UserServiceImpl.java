@@ -13,6 +13,7 @@ import com.inn.cafe.utils.CafeUtils;
 import com.inn.cafe.utils.EmailUtils;
 import com.inn.cafe.wrapper.UserWrapper;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,29 +28,29 @@ import java.util.*;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
    // @Autowired
-    private UserDao userDao;
+    private final UserDao userDao;
 
     //@Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
     //@Autowired
-    private CustomerUsersDetailsService customerUsersDetailsService;
+    private final CustomerUsersDetailsService customerUsersDetailsService;
 
     //@Autowired
-    private JWTUtils jwtUtils;
+    private final JWTUtils jwtUtils;
 
     //@Autowired
-    private JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
 
     //@Autowired
-    private EmailUtils emailUtils;
+    private final EmailUtils emailUtils;
 
     //@Autowired(required = true)
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
 
     @Override
