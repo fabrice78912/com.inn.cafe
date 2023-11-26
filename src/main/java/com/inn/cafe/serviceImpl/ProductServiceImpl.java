@@ -9,6 +9,7 @@ import com.inn.cafe.dao.ProductDao;
 import com.inn.cafe.mapper.ProductMapper;
 import com.inn.cafe.service.ProductService;
 import com.inn.cafe.utils.CafeUtils;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,15 +24,16 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    @Autowired
-    private ProductDao productDao;
 
-    @Autowired
-    private JwtFilter jwtFilter;
+    private final ProductDao productDao;
 
-    private ProductMapper productMapper;
+
+    private final JwtFilter jwtFilter;
+
+    private final ProductMapper productMapper;
 
 
     @Override
@@ -89,7 +91,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseEntity<List<ProductWrapper>> getAllProduct() {
         try {
-            return new ResponseEntity<>(productDao.getAllProduct(), HttpStatus.OK);
+            return new ResponseEntity<>(productMapper.listEntityToListDto(productDao.findAll()), HttpStatus.OK);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -153,13 +155,13 @@ public class ProductServiceImpl implements ProductService {
         try {
 
             if (jwtFilter.isAdmin()) {
-                    Optional<Product> optionalProduct = productDao.findById(Integer.parseInt(requestMap.get("id")));
-                    if (!optionalProduct.isEmpty()) {
-                        productDao.updateProductStatus(requestMap.get("status"), Integer.parseInt(requestMap.get("id")));
-                        return CafeUtils.getResponseEntity("Product status updated successfully. ", HttpStatus.OK);
-                    } else {
-                        return CafeUtils.getResponseEntity("product id doesn't exist", HttpStatus.OK);
-                    }
+                Optional<Product> optionalProduct = productDao.findById(Integer.parseInt(requestMap.get("id")));
+                if (!optionalProduct.isEmpty()) {
+                    productDao.updateProductStatus(requestMap.get("status"), Integer.parseInt(requestMap.get("id")));
+                    return CafeUtils.getResponseEntity("Product status updated successfully. ", HttpStatus.OK);
+                } else {
+                    return CafeUtils.getResponseEntity("product id doesn't exist", HttpStatus.OK);
+                }
 
             } else {
                 CafeUtils.getResponseEntity(CafeConstants.UNAUTHORIZED_ACCESS, HttpStatus.UNAUTHORIZED);
