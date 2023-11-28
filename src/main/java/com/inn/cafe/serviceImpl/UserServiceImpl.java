@@ -13,9 +13,7 @@ import com.inn.cafe.utils.CafeUtils;
 import com.inn.cafe.utils.EmailUtils;
 import com.inn.cafe.wrapper.UserWrapper;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -148,7 +146,7 @@ public class UserServiceImpl implements UserService {
                 Optional<User> optional = userDao.findById(Integer.parseInt(requestMap.get("id")));
                 if (!optional.isEmpty()) {
                     userDao.updateStatus(requestMap.get("status"), Integer.parseInt(requestMap.get("id")));
-                    //sendEmailToAllAdmin(requestMap.get("status") , optional.get().getEmail(),userDao.getAllAdmin("admin"));
+                    sendEmailToAllAdmin(requestMap.get("status") , optional.get().getEmail(),userDao.getAllAdmin("admin"));
                     return CafeUtils.getResponseEntity("user updated successfully", HttpStatus.OK);
                 } else {
                     return CafeUtils.getResponseEntity("User Id doesn't exist ", HttpStatus.OK);
@@ -164,7 +162,6 @@ public class UserServiceImpl implements UserService {
 
 
     private void sendEmailToAllAdmin(String status, String user, List<String> allAdmin) {
-
         allAdmin.remove(jwtFilter.getCurrentUser());
         if (status != null && status.equalsIgnoreCase("true")) {
             emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(), "Account Approved", "USER: - " + user + " \n is approved by \nADMIN: - " + jwtFilter.getCurrentUser(), allAdmin);
