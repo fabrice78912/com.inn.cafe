@@ -54,8 +54,8 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     private boolean validateCategoryMap(Map<String, String> requestMap, boolean validateId) {
-        if (requestMap.containsKey("name")) {
-            if (requestMap.containsKey("id") && validateId) {
+        if (requestMap.containsKey("name") && !requestMap.get("name").isBlank()) {
+            if (requestMap.containsKey("id") && validateId && !requestMap.get("id").isBlank()) {
                 return true;
             } else if (!validateId) {
                 return true;
@@ -100,14 +100,14 @@ public class CategoryServiceImpl implements CategoryService {
                     if (!optional.isEmpty()) {
                         Category category = categoryDao.findByName(requestMap.get("name"));
                         if (Objects.isNull(category)) {
-                            categoryDao.save(getCategoryFromMap(requestMap, false));
+                            categoryDao.save(getCategoryFromMap(requestMap, true));
                             return CafeUtils.getResponseEntity("Category updated successfully !!", HttpStatus.OK);
                         } else {
                             return CafeUtils.getResponseEntity("Email already exist. ", HttpStatus.CONFLICT);
                         }
 
                     } else {
-                        CafeUtils.getResponseEntity("Category id doesn't exist", HttpStatus.OK);
+                        return CafeUtils.getResponseEntity("Category id " + requestMap.get("id") + " doesn't exist", HttpStatus.NOT_FOUND);
                     }
                 }
                 return CafeUtils.getResponseEntity(CafeConstants.INVALID_DATA, HttpStatus.BAD_REQUEST);
