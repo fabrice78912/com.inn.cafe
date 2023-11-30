@@ -1,11 +1,10 @@
 package com.inn.cafe.restImpl;
 
-import com.inn.cafe.POJO.Product;
-import com.inn.cafe.wrapper.ProductWrapper;
 import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.rest.ProductRest;
 import com.inn.cafe.service.ProductService;
 import com.inn.cafe.utils.CafeUtils;
+import com.inn.cafe.wrapper.ProductWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

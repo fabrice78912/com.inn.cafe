@@ -3,16 +3,14 @@ package com.inn.cafe.serviceImpl;
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Category;
 import com.inn.cafe.POJO.Product;
-import com.inn.cafe.POJO.User;
-import com.inn.cafe.wrapper.ProductWrapper;
 import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.dao.ProductDao;
 import com.inn.cafe.mapper.ProductMapper;
 import com.inn.cafe.service.ProductService;
 import com.inn.cafe.utils.CafeUtils;
+import com.inn.cafe.wrapper.ProductWrapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -111,7 +109,7 @@ public class ProductServiceImpl implements ProductService {
                     if (!optionalProduct.isEmpty()) {
 
 
-                        Product product = productDao.findByNameAndIdNot(requestMap.get("name"),  Integer.parseInt(requestMap.get("id")));
+                        Product product = productDao.findByNameAndIdNot(requestMap.get("name"), Integer.parseInt(requestMap.get("id")));
                         if (Objects.isNull(product)) {
                             productDao.save(getProductFromMap(requestMap, true));
                             return CafeUtils.getResponseEntity("Product updated successfully !!", HttpStatus.OK);

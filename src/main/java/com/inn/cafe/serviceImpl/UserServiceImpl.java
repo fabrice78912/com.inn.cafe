@@ -12,7 +12,6 @@ import com.inn.cafe.service.UserService;
 import com.inn.cafe.utils.CafeUtils;
 import com.inn.cafe.utils.EmailUtils;
 import com.inn.cafe.wrapper.UserWrapper;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -39,12 +38,9 @@ public class UserServiceImpl implements UserService {
 
     private final JWTUtils jwtUtils;
 
-
     private final JwtFilter jwtFilter;
 
-
     private final EmailUtils emailUtils;
-
 
     private final UserMapper userMapper;
 
@@ -127,7 +123,6 @@ public class UserServiceImpl implements UserService {
         try {
             if (jwtFilter.isAdmin()) {
                 return new ResponseEntity<>(userMapper.listEntityToListDto(userDao.findByRole("user")), HttpStatus.OK);
-                //return new ResponseEntity<>(userDao.getAllUser(), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(new ArrayList<>(), HttpStatus.UNAUTHORIZED);
             }
