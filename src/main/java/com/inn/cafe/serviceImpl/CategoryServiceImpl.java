@@ -9,6 +9,7 @@ import com.inn.cafe.utils.CafeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -81,8 +82,8 @@ public class CategoryServiceImpl implements CategoryService {
             if (filter != null) {
                 if (!Strings.isEmpty(filter) && filter.equalsIgnoreCase("true")) {
                     return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
-                } else return new ResponseEntity<>(categoryDao.findAll(), HttpStatus.OK);
-            } else return new ResponseEntity<>(categoryDao.findAll(), HttpStatus.OK);
+                } else return new ResponseEntity<>(categoryDao.findAllByNameOrderByNameAsc(filter), HttpStatus.OK);
+            } else return new ResponseEntity<>(categoryDao.findAll(Sort.by(Sort.Direction.ASC, "name")), HttpStatus.OK);
 
         } catch (Exception ex) {
             ex.printStackTrace();

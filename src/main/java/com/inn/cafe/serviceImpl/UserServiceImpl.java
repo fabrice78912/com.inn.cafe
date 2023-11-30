@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
 
     private final JWTUtils jwtUtils;
 
-  
+
     private final JwtFilter jwtFilter;
 
 
@@ -146,7 +146,7 @@ public class UserServiceImpl implements UserService {
                 Optional<User> optional = userDao.findById(Integer.parseInt(requestMap.get("id")));
                 if (!optional.isEmpty()) {
                     userDao.updateStatus(requestMap.get("status"), Integer.parseInt(requestMap.get("id")));
-                    sendEmailToAllAdmin(requestMap.get("status") , optional.get().getEmail(),userDao.getAllAdmin("admin"));
+                    sendEmailToAllAdmin(requestMap.get("status"), optional.get().getEmail(), userDao.getAllAdmin("admin"));
                     return CafeUtils.getResponseEntity("user updated successfully", HttpStatus.OK);
                 } else {
                     return CafeUtils.getResponseEntity("User Id doesn't exist ", HttpStatus.OK);
@@ -199,14 +199,13 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<String> forgotPassword(Map<String, String> requestMap) {
         try {
             User user = userDao.findByEmail(requestMap.get("email"));
-            if (!Objects.isNull(user) && !Strings.isNullOrEmpty(user.getEmail()))
+            if (!Objects.isNull(user) && !Strings.isNullOrEmpty(user.getEmail())) {
                 emailUtils.forgotMail(user.getEmail(), "Credentials by cafe Management", user.getPassword());
+            }
             return CafeUtils.getResponseEntity("Check your mail for credentials.", HttpStatus.OK);
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-
     }
 }

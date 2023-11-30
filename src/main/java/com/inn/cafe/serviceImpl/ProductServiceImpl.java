@@ -13,6 +13,7 @@ import com.inn.cafe.utils.CafeUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -89,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseEntity<List<ProductWrapper>> getAllProduct() {
         try {
-            return new ResponseEntity<>(productMapper.listEntityToListDto(productDao.findAll()), HttpStatus.OK);
+            return new ResponseEntity<>(productMapper.listEntityToListDto(productDao.findAll(Sort.by(Sort.Direction.ASC, "name"))), HttpStatus.OK);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -103,10 +104,20 @@ public class ProductServiceImpl implements ProductService {
                 if (validateProductyMap(requestMap, true)) {
                     Optional<Product> optionalProduct = productDao.findById(Integer.parseInt(requestMap.get("id")));
                     if (!optionalProduct.isEmpty()) {
-                        Product product = getProductFromMap(requestMap, true);
+
+
+                        Product product = productDao.findByNameAndIdNot(requestMap.get("name"),  Integer.parseInt(requestMap.get("id")));
+                        if (Objects.isNull(product)) {
+                            productDao.save(getProductFromMap(requestMap, true));
+                            return CafeUtils.getResponseEntity("Product updated successfully !!", HttpStatus.OK);
+                        } else {
+                            return CafeUtils.getResponseEntity("Product name already exist. ", HttpStatus.CONFLICT);
+                        }
+
+                      /*  Product product = getProductFromMap(requestMap, true);
                         product.setStatus(optionalProduct.get().getStatus());
                         productDao.save(product);
-                        return CafeUtils.getResponseEntity("Product updated successfully. ", HttpStatus.OK);
+                        return CafeUtils.getResponseEntity("Product updated successfully. ", HttpStatus.OK);*/
                     } else {
                         return CafeUtils.getResponseEntity("product id doesn't exist", HttpStatus.OK);
                     }

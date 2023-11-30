@@ -1,6 +1,7 @@
 package com.inn.cafe.JWT;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,11 +16,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.List;
 
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+
+    @Value("${front.url}")
+    private String frontEndUrl;
 
     @Autowired
     private CustomerUsersDetailsService customerUsersDetailsservice;
@@ -47,7 +53,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues())
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedMethods(List.of("DELETE", "GET", "POST"));
+        corsConfiguration.setAllowedOrigins(List.of(frontEndUrl));
+        http.cors().configurationSource(request -> new CorsConfiguration(corsConfiguration).applyPermitDefaultValues())
                 .and()
                 .csrf().disable()
                 .authorizeRequests()
