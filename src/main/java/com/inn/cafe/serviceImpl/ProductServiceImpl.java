@@ -42,8 +42,13 @@ public class ProductServiceImpl implements ProductService {
         try {
             if (jwtFilter.isAdmin()) { // check if current user is Admin
                 if (validateProductyMap(requestMap, false)) {
-                    productDao.save(getProductFromMap(requestMap, false));
-                    return CafeUtils.getResponseEntity("Product added successfully!!", HttpStatus.OK);
+                    Product product = productDao.findByName(requestMap.get("name"));
+                    if (Objects.isNull(product)) {
+                        productDao.save(getProductFromMap(requestMap, false));
+                        return CafeUtils.getResponseEntity("Product added successfully!!", HttpStatus.OK);
+                    } else {
+                        return CafeUtils.getResponseEntity("Product name already exist. ", HttpStatus.CONFLICT);
+                    }
                 }
                 return CafeUtils.getResponseEntity(CafeConstants.INVALID_DATA, HttpStatus.BAD_REQUEST);
             } else {
@@ -113,11 +118,6 @@ public class ProductServiceImpl implements ProductService {
                         } else {
                             return CafeUtils.getResponseEntity("Product name already exist. ", HttpStatus.CONFLICT);
                         }
-
-                      /*  Product product = getProductFromMap(requestMap, true);
-                        product.setStatus(optionalProduct.get().getStatus());
-                        productDao.save(product);
-                        return CafeUtils.getResponseEntity("Product updated successfully. ", HttpStatus.OK);*/
                     } else {
                         return CafeUtils.getResponseEntity("product id doesn't exist", HttpStatus.OK);
                     }
