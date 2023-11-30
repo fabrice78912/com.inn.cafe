@@ -2,7 +2,6 @@ package com.inn.cafe.rest;
 
 
 import com.inn.cafe.POJO.Category;
-import org.apache.catalina.LifecycleState;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

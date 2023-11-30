@@ -1,6 +1,5 @@
 package com.inn.cafe.service;
 
-import com.inn.cafe.POJO.Product;
 import com.inn.cafe.wrapper.ProductWrapper;
 import org.springframework.http.ResponseEntity;
 

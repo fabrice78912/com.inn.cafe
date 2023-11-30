@@ -39,7 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
                         categoryDao.save(getCategoryFromMap(requestMap, false));
                         return CafeUtils.getResponseEntity("Category added successfully!!", HttpStatus.OK);
                     } else {
-                        return CafeUtils.getResponseEntity("Email already exist. ", HttpStatus.CONFLICT);
+                        return CafeUtils.getResponseEntity("Category name already exist. ", HttpStatus.CONFLICT);
                     }
                 }
             } else {
@@ -101,12 +101,11 @@ public class CategoryServiceImpl implements CategoryService {
                     if (!optional.isEmpty()) {
                         Category category = categoryDao.findByName(requestMap.get("name"));
                         if (Objects.isNull(category)) {
-                            categoryDao.save(getCategoryFromMap(requestMap, true));
+                            categoryDao.save(getCategoryFromMap(requestMap, false));
                             return CafeUtils.getResponseEntity("Category updated successfully !!", HttpStatus.OK);
                         } else {
-                            return CafeUtils.getResponseEntity("Email already exist. ", HttpStatus.CONFLICT);
+                            return CafeUtils.getResponseEntity("Category name already exist. ", HttpStatus.CONFLICT);
                         }
-
                     } else {
                         return CafeUtils.getResponseEntity("Category id " + requestMap.get("id") + " doesn't exist", HttpStatus.NOT_FOUND);
                     }

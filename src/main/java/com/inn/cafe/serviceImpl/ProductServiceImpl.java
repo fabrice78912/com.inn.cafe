@@ -3,16 +3,14 @@ package com.inn.cafe.serviceImpl;
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Category;
 import com.inn.cafe.POJO.Product;
-import com.inn.cafe.POJO.User;
-import com.inn.cafe.wrapper.ProductWrapper;
 import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.dao.ProductDao;
 import com.inn.cafe.mapper.ProductMapper;
 import com.inn.cafe.service.ProductService;
 import com.inn.cafe.utils.CafeUtils;
+import com.inn.cafe.wrapper.ProductWrapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,8 +40,13 @@ public class ProductServiceImpl implements ProductService {
         try {
             if (jwtFilter.isAdmin()) { // check if current user is Admin
                 if (validateProductyMap(requestMap, false)) {
-                    productDao.save(getProductFromMap(requestMap, false));
-                    return CafeUtils.getResponseEntity("Product added successfully!!", HttpStatus.OK);
+                    Product product = productDao.findByName(requestMap.get("name"));
+                    if (Objects.isNull(product)) {
+                        productDao.save(getProductFromMap(requestMap, false));
+                        return CafeUtils.getResponseEntity("Product added successfully!!", HttpStatus.OK);
+                    } else {
+                        return CafeUtils.getResponseEntity("Product name already exist. ", HttpStatus.CONFLICT);
+                    }
                 }
                 return CafeUtils.getResponseEntity(CafeConstants.INVALID_DATA, HttpStatus.BAD_REQUEST);
             } else {
@@ -106,18 +109,13 @@ public class ProductServiceImpl implements ProductService {
                     if (!optionalProduct.isEmpty()) {
 
 
-                        Product product = productDao.findByNameAndIdNot(requestMap.get("name"),  Integer.parseInt(requestMap.get("id")));
+                        Product product = productDao.findByNameAndIdNot(requestMap.get("name"), Integer.parseInt(requestMap.get("id")));
                         if (Objects.isNull(product)) {
                             productDao.save(getProductFromMap(requestMap, true));
                             return CafeUtils.getResponseEntity("Product updated successfully !!", HttpStatus.OK);
                         } else {
                             return CafeUtils.getResponseEntity("Product name already exist. ", HttpStatus.CONFLICT);
                         }
-
-                      /*  Product product = getProductFromMap(requestMap, true);
-                        product.setStatus(optionalProduct.get().getStatus());
-                        productDao.save(product);
-                        return CafeUtils.getResponseEntity("Product updated successfully. ", HttpStatus.OK);*/
                     } else {
                         return CafeUtils.getResponseEntity("product id doesn't exist", HttpStatus.OK);
                     }
