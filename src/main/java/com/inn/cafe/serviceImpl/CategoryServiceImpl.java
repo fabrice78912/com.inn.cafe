@@ -81,7 +81,7 @@ public class CategoryServiceImpl implements CategoryService {
 
             if (filter != null) {
                 if (!Strings.isEmpty(filter) && filter.equalsIgnoreCase("true")) {
-                    return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
+                    return new ResponseEntity<>(categoryDao.findAll(Sort.by(Sort.Direction.ASC, "name")), HttpStatus.OK);
                 } else return new ResponseEntity<>(categoryDao.findAllByNameOrderByNameAsc(filter), HttpStatus.OK);
             } else return new ResponseEntity<>(categoryDao.findAll(Sort.by(Sort.Direction.ASC, "name")), HttpStatus.OK);
 
