@@ -12,4 +12,5 @@ public interface CategoryDao extends JpaRepository<Category, Integer> {
 
     List<Category> findAllByNameOrderByNameAsc(String name);
 
+
 }

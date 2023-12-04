@@ -4,6 +4,7 @@ import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Category;
 import com.inn.cafe.POJO.Product;
 import com.inn.cafe.constents.CafeConstants;
+import com.inn.cafe.dao.CategoryDao;
 import com.inn.cafe.dao.ProductDao;
 import com.inn.cafe.mapper.ProductMapper;
 import com.inn.cafe.service.ProductService;
@@ -27,6 +28,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductDao productDao;
 
+    private  final CategoryDao categoryDao;
 
     private final JwtFilter jwtFilter;
 
@@ -206,6 +208,23 @@ public class ProductServiceImpl implements ProductService {
             ex.printStackTrace();
         }
         return new ResponseEntity<>(new ProductWrapper(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+    }
+
+    @Override
+    public ResponseEntity<Long> countByCategoryId(Integer id) {
+        try {
+            Optional<Category> category= categoryDao.findById(id);
+            if(!category.isEmpty()){
+                return new ResponseEntity<>(productDao.countByCategoryId(id), HttpStatus.OK);
+            }else {
+                return new ResponseEntity<>(new Long(-1), HttpStatus.NOT_FOUND);
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return new ResponseEntity<>(new Long(-1), HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
 }

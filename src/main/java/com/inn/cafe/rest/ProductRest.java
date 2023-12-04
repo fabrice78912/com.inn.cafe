@@ -35,5 +35,8 @@ public interface ProductRest {
     @GetMapping(path = "/getById/{id}")
     public ResponseEntity<ProductWrapper> getById(@PathVariable Integer id);
 
+    @GetMapping(path = "/count/{id}")
+    public ResponseEntity<Long> countByCategoryId(@PathVariable Integer id);
+
 
 }

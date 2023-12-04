@@ -9,6 +9,9 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 
 @Entity
@@ -53,5 +56,7 @@ public class Bill implements Serializable {
     @Column(name = "createdby")
     private String createdBy;
 
+    @Column(name = "datecreated")
+    private LocalDateTime localDateTime = LocalDateTime.now();
 
 }

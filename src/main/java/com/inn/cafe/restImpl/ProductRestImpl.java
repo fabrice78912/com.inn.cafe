@@ -102,4 +102,15 @@ public class ProductRestImpl implements ProductRest {
         return new ResponseEntity<>(new ProductWrapper(), HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
+
+    @Override
+    public ResponseEntity<Long> countByCategoryId(Integer id) {
+        try {
+            return productService.countByCategoryId(id);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return new ResponseEntity<>(new Long(-1), HttpStatus.INTERNAL_SERVER_ERROR);
+
+    }
 }

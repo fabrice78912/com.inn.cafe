@@ -24,4 +24,6 @@ public interface ProductDao extends JpaRepository<Product, Integer> {
 
     Product findByName(String name);
     Product findByNameAndIdNot(String name, Integer id);
+
+    Long countByCategoryId(Integer categoryId);
 }
