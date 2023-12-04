@@ -154,5 +154,6 @@
 
             </plugin>
         </plugins>
+        <finalName>cafe-app</finalName>
     </build>
 </project>
