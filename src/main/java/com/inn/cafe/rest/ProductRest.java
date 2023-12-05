@@ -1,6 +1,7 @@
 package com.inn.cafe.rest;
 
 
+import com.inn.cafe.POJO.Product;
 import com.inn.cafe.wrapper.ProductWrapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,9 @@ public interface ProductRest {
 
     @GetMapping(path = "/getProductByCategory/{id}")
     public ResponseEntity<List<ProductWrapper>> getProductByCategory(@PathVariable Integer id);
+
+    @GetMapping(path = "/getProductByCategory")
+    public ResponseEntity<Map<String, List<Product>>> getProductByCategory();
 
     @GetMapping(path = "/getById/{id}")
     public ResponseEntity<ProductWrapper> getById(@PathVariable Integer id);

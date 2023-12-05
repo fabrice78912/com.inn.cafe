@@ -1,5 +1,6 @@
 package com.inn.cafe.service;
 
+import com.inn.cafe.POJO.Product;
 import com.inn.cafe.wrapper.ProductWrapper;
 import org.springframework.http.ResponseEntity;
 
@@ -19,7 +20,12 @@ public interface ProductService {
 
     ResponseEntity<List<ProductWrapper>> getProductByCategory(Integer id);
 
+    ResponseEntity<Map<String , List<Product>>> getProductByCategory();
+
     ResponseEntity<ProductWrapper> getById(Integer id);
 
     ResponseEntity<Long> countByCategoryId(Integer id);
+
+
+
 }

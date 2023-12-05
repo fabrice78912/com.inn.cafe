@@ -1,5 +1,6 @@
 package com.inn.cafe.restImpl;
 
+import com.inn.cafe.POJO.Product;
 import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.rest.ProductRest;
 import com.inn.cafe.service.ProductService;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +92,17 @@ public class ProductRestImpl implements ProductRest {
             ex.printStackTrace();
         }
         return new ResponseEntity<>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<Map<String,List<Product>>> getProductByCategory() {
+        try {
+            return productService.getProductByCategory();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return new ResponseEntity<>(new HashMap<>(), HttpStatus.INTERNAL_SERVER_ERROR);
+
     }
 
     @Override

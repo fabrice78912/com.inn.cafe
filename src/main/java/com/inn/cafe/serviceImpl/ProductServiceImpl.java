@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -194,6 +195,19 @@ public class ProductServiceImpl implements ProductService {
         return new ResponseEntity<>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
+
+    @Override
+    public ResponseEntity<Map<String,List<Product>>> getProductByCategory() {
+
+        List<Product> productList = productDao.findAll();
+
+        Map<String, List<Product>> productsByCategory = productList.stream()
+                .collect(Collectors.groupingBy(product -> product.getCategory().getName()));
+
+        return ResponseEntity.ok(productsByCategory);
+    }
+
+
 
     @Override
     public ResponseEntity<ProductWrapper> getById(Integer id) {
