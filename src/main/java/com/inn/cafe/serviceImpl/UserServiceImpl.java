@@ -196,7 +196,8 @@ public class UserServiceImpl implements UserService {
             if (!Objects.isNull(user) && !Strings.isNullOrEmpty(user.getEmail())) {
                 emailUtils.forgotMail(user.getEmail(), "Credentials by cafe Management", user.getPassword());
             }
-            return CafeUtils.getResponseEntity("Check your mail for credentials.", HttpStatus.OK);
+            else if (Objects.isNull(user)){
+            return CafeUtils.getResponseEntity("Check your mail for credentials.", HttpStatus.OK);}
         } catch (Exception ex) {
             ex.printStackTrace();
         }

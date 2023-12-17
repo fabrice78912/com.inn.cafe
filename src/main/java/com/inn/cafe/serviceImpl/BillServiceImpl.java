@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.io.IOUtils;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class BillServiceImpl implements BillService {
     @Autowired
     private BillDao billDao;
 
+    @Value("${location.store}")
+    private String storeLocation;
+
 
     @Override
     public ResponseEntity<String> generateReport(Map<String, Object> requestMap) {
@@ -55,7 +59,7 @@ public class BillServiceImpl implements BillService {
                         "\n" + "Email: " + requestMap.get("email") + "\n" + "Payment Method: " + requestMap.get("paymentMethod");
 
                 Document document = new Document();
-                PdfWriter.getInstance(document, new FileOutputStream(CafeConstants.STORE_LOCATION + "/" + fileName + ".pdf"));
+                PdfWriter.getInstance(document, new FileOutputStream(storeLocation + "/" + fileName + ".pdf"));
 
                 document.open();
                 setRectangleInPdf(document);

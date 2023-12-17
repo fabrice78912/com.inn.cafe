@@ -5,14 +5,22 @@ import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.rest.CategoryRest;
 import com.inn.cafe.service.CategoryService;
 import com.inn.cafe.utils.CafeUtils;
+import org.example.common.dto.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import static java.time.LocalDateTime.now;
+import static java.util.Map.of;
+import static org.springframework.http.HttpStatus.OK;
 
 
 @RestController
@@ -53,4 +61,23 @@ public class CategoryRestImpl implements CategoryRest {
         }
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @Override
+    public ResponseEntity<Response> getCategory(Optional<String> name, Optional<Integer> page, Optional<Integer> size) {
+            // TimeUnit.SECONDS.sleep(3);
+            //throw new RuntimeException("Forced exception for testing");
+            //return new ResponseEntity<>(categoryService.getCategory(name.orElse(""), page.orElse(0), size.orElse(10) ), OK) ;
+
+        return ResponseEntity.ok().body(
+                Response.builder()
+                        .timeStamp(LocalDateTime.parse(now().toString()))
+                        .data(of("page", categoryService.getCategory(name.orElse(""), page.orElse(0), size.orElse(10))))
+                        .message("categories Retrieved")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
+
+
 }
