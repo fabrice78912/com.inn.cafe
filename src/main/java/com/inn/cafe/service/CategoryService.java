@@ -1,6 +1,8 @@
 package com.inn.cafe.service;
 
 import com.inn.cafe.POJO.Category;
+import org.example.common.dto.Response;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -13,4 +15,6 @@ public interface CategoryService {
     ResponseEntity<List<Category>> getAllCategory(String filter);
 
     ResponseEntity<String> updateCategory(Map<String, String> requestMap);
+
+    Page<Category> getCategory(String orElse, Integer orElse1, Integer orElse2);
 }

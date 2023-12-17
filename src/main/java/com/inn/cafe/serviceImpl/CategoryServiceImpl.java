@@ -8,13 +8,19 @@ import com.inn.cafe.service.CategoryService;
 import com.inn.cafe.utils.CafeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.example.common.dto.Response;
+import org.example.common.exception.InternalServerErrorException;
+import org.example.common.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+
+import static org.springframework.data.domain.PageRequest.of;
 
 @Slf4j
 @Service
@@ -118,6 +124,20 @@ public class CategoryServiceImpl implements CategoryService {
             ex.printStackTrace();
         }
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+
+    }
+
+    @Override
+    public Page<Category> getCategory(String name, Integer page, Integer size) {
+
+
+        log.info("Fetching users for page {} of size {}", page, size);
+        Page<Category> userPage = categoryDao.findByNameContaining(name, of(page, size));
+        if (userPage.getTotalElements() > 0) {
+            return userPage;
+        } else {
+            throw new UserNotFoundException("user not found");
+        }
 
     }
 }
