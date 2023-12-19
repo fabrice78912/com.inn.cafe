@@ -13,8 +13,6 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Delete previous image
-        run: sudo docker rmi cafe-cicd || true
       - name: Pull Docker image
         run: sudo docker pull fabrice7891/cafe-system:latest
       - name: Delete Old docker container
