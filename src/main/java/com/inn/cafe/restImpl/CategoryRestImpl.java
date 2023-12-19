@@ -2,12 +2,11 @@ package com.inn.cafe.restImpl;
 
 import com.inn.cafe.POJO.Category;
 import com.inn.cafe.constents.CafeConstants;
+import com.inn.cafe.dto.Response;
 import com.inn.cafe.rest.CategoryRest;
 import com.inn.cafe.service.CategoryService;
 import com.inn.cafe.utils.CafeUtils;
-import org.example.common.dto.Response;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;

@@ -4,13 +4,11 @@ import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Category;
 import com.inn.cafe.constents.CafeConstants;
 import com.inn.cafe.dao.CategoryDao;
+import com.inn.cafe.exception.UserNotFoundException;
 import com.inn.cafe.service.CategoryService;
 import com.inn.cafe.utils.CafeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.example.common.dto.Response;
-import org.example.common.exception.InternalServerErrorException;
-import org.example.common.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -136,7 +134,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (userPage.getTotalElements() > 0) {
             return userPage;
         } else {
-            throw new UserNotFoundException("user not found");
+            throw new UserNotFoundException("category not found");
         }
 
     }

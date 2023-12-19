@@ -1,7 +1,6 @@
 package com.inn.cafe.service;
 
 import com.inn.cafe.POJO.Category;
-import org.example.common.dto.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
