@@ -200,8 +200,20 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
-
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.inn.cafe.CafeManagementSystemApplication</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
         </plugins>
         <finalName>cafe-app</finalName>
     </build>
