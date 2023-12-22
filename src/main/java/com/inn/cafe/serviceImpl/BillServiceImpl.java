@@ -278,21 +278,12 @@ public class BillServiceImpl implements BillService {
     }
 
 
-
-
-
     public String uploadFile(File file) {
-        //File fileObj = convertMultiPartFileToFile(file);
         String fileName = System.currentTimeMillis() + "_" + file.getName();
-        s3Client.putObject(new PutObjectRequest(bucketName +"/store", fileName, file));
+        s3Client.putObject(new PutObjectRequest(bucketName , fileName, file));
         file.delete();
         return "File uploaded : " + fileName;
     }
-
-
-
-
-
 
 
 
