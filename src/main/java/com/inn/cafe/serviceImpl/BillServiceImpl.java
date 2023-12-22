@@ -1,5 +1,7 @@
 package com.inn.cafe.serviceImpl;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Bill;
 import com.inn.cafe.constents.CafeConstants;
@@ -18,8 +20,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +43,12 @@ public class BillServiceImpl implements BillService {
 
     @Value("${location.store}")
     private String storeLocation;
+
+    @Autowired
+    private AmazonS3 s3Client;
+
+    @Value("${application.bucket.name}")
+    private String bucketName;
 
 
     @Override
@@ -59,7 +70,8 @@ public class BillServiceImpl implements BillService {
                         "\n" + "Email: " + requestMap.get("email") + "\n" + "Payment Method: " + requestMap.get("paymentMethod");
 
                 Document document = new Document();
-                PdfWriter.getInstance(document, new FileOutputStream(storeLocation + "/" + fileName + ".pdf"));
+                String fullFileName = fileName + ".pdf";
+                PdfWriter.getInstance(document,  new FileOutputStream(fullFileName));
 
                 document.open();
                 setRectangleInPdf(document);
@@ -87,6 +99,12 @@ public class BillServiceImpl implements BillService {
                         + " Thank you for visiting again !! ", getFront("Data"));
                 document.add(footer);
                 document.close();
+
+                // upload to AWS S3
+                File file = new File(fullFileName);
+
+               String uploadFile = uploadFile(file);
+               log.info(uploadFile);
                 return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
 
             } else {
@@ -246,4 +264,46 @@ public class BillServiceImpl implements BillService {
         }
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
+
+
+
+    public String uploadFile(File file) {
+        //File fileObj = convertMultiPartFileToFile(file);
+        String fileName = System.currentTimeMillis() + "_" + file.getName();
+        s3Client.putObject(new PutObjectRequest(bucketName +"/assets", fileName, file));
+        file.delete();
+        return "File uploaded : " + fileName;
+    }
+
+
+
+    private File convertMultiPartFileToFile(MultipartFile file) {
+        File convertedFile = new File(file.getName());
+        try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
+            fos.write(file.getBytes());
+        } catch (IOException e) {
+            log.error("Error converting multipartFile to file", e);
+        }
+        return convertedFile;
+    }
+
+
+    public MultipartFile getSpecificFileAsMultipartFile(String directoryPath, String filename) throws IOException {
+        // Construct the file path
+        File directory = ResourceUtils.getFile(directoryPath);
+        File file = new File(directory, filename);
+
+        // Check if the file exists
+        if (!file.exists()) {
+            throw new IOException("File not found: " + filename);
+        }
+
+        // Convert the File to MultipartFile
+        byte[] fileContent = Files.readAllBytes(file.toPath());
+        return new InMemoryMultipartFile(file.getName(), file.getName(), "application/octet-stream", fileContent);
+    }
+
+
 }
