@@ -2,6 +2,8 @@ package com.inn.cafe.serviceImpl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Bill;
 import com.inn.cafe.constents.CafeConstants;
@@ -105,7 +107,7 @@ public class BillServiceImpl implements BillService {
 
                String uploadFile = uploadFile(file);
                log.info(uploadFile);
-                return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
+               return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
 
             } else {
                 return CafeUtils.getResponseEntity("Required data not found", HttpStatus.BAD_REQUEST);
@@ -231,16 +233,26 @@ public class BillServiceImpl implements BillService {
             bytes = getByArray(filePath);
             return new ResponseEntity<>(bytes, HttpStatus.OK);
 
-
-
-
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return null;
 
     }
+
+
+    /*public byte[] downloadFile(String fileName) {
+        S3Object s3Object = s3Client.getObject(bucketName, fileName);
+        S3ObjectInputStream inputStream = s3Object.getObjectContent();
+        try {
+            byte[] content = com.amazonaws.util.IOUtils.toByteArray(inputStream);
+            return content;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }*/
+
 
     private byte[] getByArray(String filePath) throws Exception {
         File initialFile = new File(filePath);
@@ -272,38 +284,16 @@ public class BillServiceImpl implements BillService {
     public String uploadFile(File file) {
         //File fileObj = convertMultiPartFileToFile(file);
         String fileName = System.currentTimeMillis() + "_" + file.getName();
-        s3Client.putObject(new PutObjectRequest(bucketName +"/assets", fileName, file));
+        s3Client.putObject(new PutObjectRequest(bucketName +"/store", fileName, file));
         file.delete();
         return "File uploaded : " + fileName;
     }
 
 
 
-    private File convertMultiPartFileToFile(MultipartFile file) {
-        File convertedFile = new File(file.getName());
-        try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
-            fos.write(file.getBytes());
-        } catch (IOException e) {
-            log.error("Error converting multipartFile to file", e);
-        }
-        return convertedFile;
-    }
 
 
-    public MultipartFile getSpecificFileAsMultipartFile(String directoryPath, String filename) throws IOException {
-        // Construct the file path
-        File directory = ResourceUtils.getFile(directoryPath);
-        File file = new File(directory, filename);
 
-        // Check if the file exists
-        if (!file.exists()) {
-            throw new IOException("File not found: " + filename);
-        }
-
-        // Convert the File to MultipartFile
-        byte[] fileContent = Files.readAllBytes(file.toPath());
-        return new InMemoryMultipartFile(file.getName(), file.getName(), "application/octet-stream", fileContent);
-    }
 
 
 }
