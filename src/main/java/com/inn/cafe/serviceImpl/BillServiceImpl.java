@@ -223,15 +223,17 @@ public class BillServiceImpl implements BillService {
                 return new ResponseEntity<>(bytes, HttpStatus.BAD_REQUEST);
             }
 
+            String fileName =(String) requestMap.get("uuid") + ".pdf";
            // String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
-            String filePath = bucketName + "/" + (String) requestMap.get("uuid") + ".pdf";
+            String filePath = bucketName + "/" + fileName;
 
             if (!CafeUtils.isFileExist(filePath)) {
                 requestMap.put("isGenerated", false);
                 generateReport(requestMap);
 
             }
-            bytes = getByArray(filePath);
+           // bytes = getByArray(filePath);
+            bytes = downloadFile(fileName);
             return new ResponseEntity<>(bytes, HttpStatus.OK);
 
         } catch (Exception ex) {
@@ -241,7 +243,7 @@ public class BillServiceImpl implements BillService {
     }
 
 
-    /*public byte[] downloadFile(String fileName) {
+    public byte[] downloadFile(String fileName) {
         S3Object s3Object = s3Client.getObject(bucketName, fileName);
         S3ObjectInputStream inputStream = s3Object.getObjectContent();
         try {
@@ -251,7 +253,7 @@ public class BillServiceImpl implements BillService {
             e.printStackTrace();
         }
         return null;
-    }*/
+    }
 
 
     private byte[] getByArray(String filePath) throws Exception {
