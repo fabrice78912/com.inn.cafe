@@ -223,7 +223,8 @@ public class BillServiceImpl implements BillService {
                 return new ResponseEntity<>(bytes, HttpStatus.BAD_REQUEST);
             }
 
-            String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
+           // String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
+            String filePath = bucketName + "/" + (String) requestMap.get("uuid") + ".pdf";
 
             if (!CafeUtils.isFileExist(filePath)) {
                 requestMap.put("isGenerated", false);
@@ -237,7 +238,6 @@ public class BillServiceImpl implements BillService {
             ex.printStackTrace();
         }
         return null;
-
     }
 
 
