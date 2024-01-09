@@ -1,9 +1,6 @@
 package com.inn.cafe.serviceImpl;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Bill;
 import com.inn.cafe.constents.CafeConstants;
@@ -14,6 +11,7 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.io.IOUtils;
 import org.json.JSONArray;
@@ -22,11 +20,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
-import java.nio.file.Files;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,22 +33,23 @@ import java.util.stream.Stream;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class BillServiceImpl implements BillService {
 
-    @Autowired
+    //@Autowired
     private JwtFilter jwtFilter;
 
-    @Autowired
+    //@Autowired
     private BillDao billDao;
 
     @Value("${location.store}")
     private String storeLocation;
 
-    @Autowired
-    private AmazonS3 s3Client;
+//    @Autowired
+//    private AmazonS3 s3Client;
 
-    @Value("${application.bucket.name}")
-    private String bucketName;
+    /*@Value("${application.bucket.name}")
+    private String bucketName;*/
 
 
     @Override
@@ -72,8 +71,12 @@ public class BillServiceImpl implements BillService {
                         "\n" + "Email: " + requestMap.get("email") + "\n" + "Payment Method: " + requestMap.get("paymentMethod");
 
                 Document document = new Document();
-                String fullFileName = fileName + ".pdf";
+
+                /*String fullFileName = fileName + ".pdf";
                 PdfWriter.getInstance(document,  new FileOutputStream(fullFileName));
+ */
+                PdfWriter.getInstance(document, new FileOutputStream(storeLocation + "/" + fileName + ".pdf"));
+
 
                 document.open();
                 setRectangleInPdf(document);
@@ -103,10 +106,10 @@ public class BillServiceImpl implements BillService {
                 document.close();
 
                 // upload to AWS S3
-                File file = new File(fullFileName);
+               // File file = new File(fullFileName);
 
-               String uploadFile = uploadFile(file);
-               log.info(uploadFile);
+              // String uploadFile = uploadFile(file);
+              // log.info(uploadFile);
                return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
 
             } else {
@@ -224,8 +227,8 @@ public class BillServiceImpl implements BillService {
             }
 
             String fileName =(String) requestMap.get("uuid") + ".pdf";
-           // String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
-            String filePath = bucketName + "/" + fileName;
+           String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
+            //String filePath = bucketName + "/" + fileName;
 
             if (!CafeUtils.isFileExist(filePath)) {
                 requestMap.put("isGenerated", false);
@@ -233,7 +236,7 @@ public class BillServiceImpl implements BillService {
 
             }
            // bytes = getByArray(filePath);
-            bytes = downloadFile(fileName);
+           // bytes = downloadFile(fileName);
             return new ResponseEntity<>(bytes, HttpStatus.OK);
 
         } catch (Exception ex) {
@@ -243,7 +246,7 @@ public class BillServiceImpl implements BillService {
     }
 
 
-    public byte[] downloadFile(String fileName) {
+    /*public byte[] downloadFile(String fileName) {
         S3Object s3Object = s3Client.getObject(bucketName, fileName);
         S3ObjectInputStream inputStream = s3Object.getObjectContent();
         try {
@@ -253,7 +256,7 @@ public class BillServiceImpl implements BillService {
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
 
 
     private byte[] getByArray(String filePath) throws Exception {
@@ -280,13 +283,11 @@ public class BillServiceImpl implements BillService {
     }
 
 
-    public String uploadFile(File file) {
+   /* public String uploadFile(File file) {
         String fileName = System.currentTimeMillis() + "_" + file.getName();
         s3Client.putObject(new PutObjectRequest(bucketName , fileName, file));
         file.delete();
         return "File uploaded : " + fileName;
-    }
-
-
+    }*/
 
 }
