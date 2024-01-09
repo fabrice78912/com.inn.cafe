@@ -37,10 +37,10 @@ import java.util.stream.Stream;
 public class BillServiceImpl implements BillService {
 
     //@Autowired
-    private JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
 
     //@Autowired
-    private BillDao billDao;
+    private final BillDao billDao;
 
     @Value("${location.store}")
     private String storeLocation;
