@@ -1,6 +1,7 @@
 package com.inn.cafe.JWT;
 
 import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,13 +18,13 @@ import java.io.IOException;
 
 
 @Component
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JWTUtils jwtUtils;
 
-    @Autowired
-    private CustomerUsersDetailsService customerUsersDetailsService;
+    private final JWTUtils jwtUtils;
+
+    private final CustomerUsersDetailsService customerUsersDetailsService;
 
     Claims claims = null;
     private String username = null;
