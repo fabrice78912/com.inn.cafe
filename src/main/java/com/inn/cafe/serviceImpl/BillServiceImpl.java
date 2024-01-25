@@ -15,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.io.IOUtils;
 import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static org.springframework.data.domain.PageRequest.of;
 
 @Service
 @Slf4j
@@ -71,12 +75,7 @@ public class BillServiceImpl implements BillService {
                         "\n" + "Email: " + requestMap.get("email") + "\n" + "Payment Method: " + requestMap.get("paymentMethod");
 
                 Document document = new Document();
-
-                /*String fullFileName = fileName + ".pdf";
-                PdfWriter.getInstance(document,  new FileOutputStream(fullFileName));
- */
-                PdfWriter.getInstance(document, new FileOutputStream(storeLocation + "/" + fileName + ".pdf"));
-
+                PdfWriter.getInstance(document, new FileOutputStream(CafeConstants.STORE_LOCATION + "/" + fileName + ".pdf"));
 
                 document.open();
                 setRectangleInPdf(document);
@@ -104,13 +103,7 @@ public class BillServiceImpl implements BillService {
                         + " Thank you for visiting again !! ", getFront("Data"));
                 document.add(footer);
                 document.close();
-
-                // upload to AWS S3
-               // File file = new File(fullFileName);
-
-              // String uploadFile = uploadFile(file);
-              // log.info(uploadFile);
-               return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
+                return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
 
             } else {
                 return CafeUtils.getResponseEntity("Required data not found", HttpStatus.BAD_REQUEST);
@@ -218,6 +211,18 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    public ResponseEntity<Page<Bill>> getBillsPagination(Integer page, Integer size) {
+        Page<Bill> bills;
+        if (jwtFilter.isAdmin()) {
+            bills = billDao.findAllOrderedByIdDesc(of(page, size, Sort.by("name").ascending()));
+        } else {
+            bills = billDao.getBillByUserNamePage(jwtFilter.getCurrentUser(), of(page, size, Sort.by("name").ascending()));
+        }
+        return new ResponseEntity<>(bills, HttpStatus.OK);
+    }
+
+
+    @Override
     public ResponseEntity<byte[]> getPdf(Map<String, Object> requestMap) {
         log.info(" Inside getPdf : requestMap {}", requestMap);
         try {
@@ -226,23 +231,22 @@ public class BillServiceImpl implements BillService {
                 return new ResponseEntity<>(bytes, HttpStatus.BAD_REQUEST);
             }
 
-            String fileName =(String) requestMap.get("uuid") + ".pdf";
-           String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
-            //String filePath = bucketName + "/" + fileName;
+            String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
 
             if (!CafeUtils.isFileExist(filePath)) {
                 requestMap.put("isGenerated", false);
                 generateReport(requestMap);
 
             }
-           // bytes = getByArray(filePath);
-           // bytes = downloadFile(fileName);
+            bytes = getByArray(filePath);
             return new ResponseEntity<>(bytes, HttpStatus.OK);
+
 
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return null;
+
     }
 
 
@@ -270,13 +274,13 @@ public class BillServiceImpl implements BillService {
     @Override
     public ResponseEntity<String> deleteBill(Integer id) {
         try {
-            Optional<Bill> optional= billDao.findById(id);
-            if(!optional.isEmpty()){
-             billDao.deleteById(id);
-             return CafeUtils.getResponseEntity("Bill deleted successfully !! ", HttpStatus.OK);
+            Optional<Bill> optional = billDao.findById(id);
+            if (!optional.isEmpty()) {
+                billDao.deleteById(id);
+                return CafeUtils.getResponseEntity("Bill deleted successfully !! ", HttpStatus.OK);
             }
             return CafeUtils.getResponseEntity("Bill id doesn't exist !! ", HttpStatus.OK);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
