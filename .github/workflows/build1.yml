@@ -79,20 +79,20 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:${{ needs.validate.outputs.image_tag }}
           push: false
 
-  #test:
-    #needs: build
-    #runs-on: ubuntu-latest
-    #steps:
-      #- name: Run unit tests
-        #run: |
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run unit tests
+        run: |
           
-          #docker run --rm ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }} npm test || {
+          docker run --rm ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }} npm test || {
             
-            #echo "Tests failed"; exit 1;
-          #}
+            echo "Tests failed"; exit 1;
+          }
 
   scan:
-    #needs: test
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Scan Docker image (non-blocking)
