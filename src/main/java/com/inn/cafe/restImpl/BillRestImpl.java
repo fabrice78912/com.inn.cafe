@@ -6,13 +6,19 @@ import com.inn.cafe.rest.BillRest;
 import com.inn.cafe.service.BillService;
 import com.inn.cafe.utils.CafeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 @RestController
@@ -41,6 +47,17 @@ public class BillRestImpl implements BillRest {
         }
         return  new ResponseEntity<>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
 
+    }
+
+    @Override
+    public ResponseEntity<Page<Bill>> getBillsPagination(@RequestParam Optional<Integer> page,
+                                                         @RequestParam Optional<Integer> size) {
+        try {
+            return billService.getBillsPagination(page.orElse(0), size.orElse(0));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return  new ResponseEntity<>(new PageImpl<>(null,  PageRequest.of(page.orElse(0), size.orElse(0)), 0), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Override

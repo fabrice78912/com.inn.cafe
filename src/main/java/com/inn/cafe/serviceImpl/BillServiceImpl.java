@@ -1,9 +1,6 @@
 package com.inn.cafe.serviceImpl;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Bill;
 import com.inn.cafe.constents.CafeConstants;
@@ -14,43 +11,49 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.io.IOUtils;
 import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
-import java.nio.file.Files;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.springframework.data.domain.PageRequest.of;
+
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class BillServiceImpl implements BillService {
 
-    @Autowired
-    private JwtFilter jwtFilter;
+    //@Autowired
+    private final JwtFilter jwtFilter;
 
-    @Autowired
-    private BillDao billDao;
+    //@Autowired
+    private final BillDao billDao;
 
     @Value("${location.store}")
     private String storeLocation;
 
-    @Autowired
-    private AmazonS3 s3Client;
+//    @Autowired
+//    private AmazonS3 s3Client;
 
-    @Value("${application.bucket.name}")
-    private String bucketName;
+    /*@Value("${application.bucket.name}")
+    private String bucketName;*/
 
 
     @Override
@@ -72,8 +75,7 @@ public class BillServiceImpl implements BillService {
                         "\n" + "Email: " + requestMap.get("email") + "\n" + "Payment Method: " + requestMap.get("paymentMethod");
 
                 Document document = new Document();
-                String fullFileName = fileName + ".pdf";
-                PdfWriter.getInstance(document,  new FileOutputStream(fullFileName));
+                PdfWriter.getInstance(document, new FileOutputStream(CafeConstants.STORE_LOCATION + "/" + fileName + ".pdf"));
 
                 document.open();
                 setRectangleInPdf(document);
@@ -101,13 +103,7 @@ public class BillServiceImpl implements BillService {
                         + " Thank you for visiting again !! ", getFront("Data"));
                 document.add(footer);
                 document.close();
-
-                // upload to AWS S3
-                File file = new File(fullFileName);
-
-               String uploadFile = uploadFile(file);
-               log.info(uploadFile);
-               return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
+                return new ResponseEntity<>("{\"uuid\":\"" + fileName + "\" }", HttpStatus.OK);
 
             } else {
                 return CafeUtils.getResponseEntity("Required data not found", HttpStatus.BAD_REQUEST);
@@ -215,6 +211,18 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    public ResponseEntity<Page<Bill>> getBillsPagination(Integer page, Integer size) {
+        Page<Bill> bills;
+        if (jwtFilter.isAdmin()) {
+            bills = billDao.findAllOrderedByIdDesc(of(page, size, Sort.by("name").ascending()));
+        } else {
+            bills = billDao.getBillByUserNamePage(jwtFilter.getCurrentUser(), of(page, size, Sort.by("name").ascending()));
+        }
+        return new ResponseEntity<>(bills, HttpStatus.OK);
+    }
+
+
+    @Override
     public ResponseEntity<byte[]> getPdf(Map<String, Object> requestMap) {
         log.info(" Inside getPdf : requestMap {}", requestMap);
         try {
@@ -223,27 +231,26 @@ public class BillServiceImpl implements BillService {
                 return new ResponseEntity<>(bytes, HttpStatus.BAD_REQUEST);
             }
 
-            String fileName =(String) requestMap.get("uuid") + ".pdf";
-           // String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
-            String filePath = bucketName + "/" + fileName;
+            String filePath = CafeConstants.STORE_LOCATION + "/" + (String) requestMap.get("uuid") + ".pdf";
 
             if (!CafeUtils.isFileExist(filePath)) {
                 requestMap.put("isGenerated", false);
                 generateReport(requestMap);
 
             }
-           // bytes = getByArray(filePath);
-            bytes = downloadFile(fileName);
+            bytes = getByArray(filePath);
             return new ResponseEntity<>(bytes, HttpStatus.OK);
+
 
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return null;
+
     }
 
 
-    public byte[] downloadFile(String fileName) {
+    /*public byte[] downloadFile(String fileName) {
         S3Object s3Object = s3Client.getObject(bucketName, fileName);
         S3ObjectInputStream inputStream = s3Object.getObjectContent();
         try {
@@ -253,7 +260,7 @@ public class BillServiceImpl implements BillService {
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
 
 
     private byte[] getByArray(String filePath) throws Exception {
@@ -267,26 +274,24 @@ public class BillServiceImpl implements BillService {
     @Override
     public ResponseEntity<String> deleteBill(Integer id) {
         try {
-            Optional<Bill> optional= billDao.findById(id);
-            if(!optional.isEmpty()){
-             billDao.deleteById(id);
-             return CafeUtils.getResponseEntity("Bill deleted successfully !! ", HttpStatus.OK);
+            Optional<Bill> optional = billDao.findById(id);
+            if (!optional.isEmpty()) {
+                billDao.deleteById(id);
+                return CafeUtils.getResponseEntity("Bill deleted successfully !! ", HttpStatus.OK);
             }
             return CafeUtils.getResponseEntity("Bill id doesn't exist !! ", HttpStatus.OK);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 
-    public String uploadFile(File file) {
+   /* public String uploadFile(File file) {
         String fileName = System.currentTimeMillis() + "_" + file.getName();
         s3Client.putObject(new PutObjectRequest(bucketName , fileName, file));
         file.delete();
         return "File uploaded : " + fileName;
-    }
-
-
+    }*/
 
 }
