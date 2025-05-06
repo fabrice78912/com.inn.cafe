@@ -1,4 +1,4 @@
-package com.inn.cafe.serviceImpl;
+package com.inn.cafe.serviceimpl;
 
 import com.google.common.base.Strings;
 import com.inn.cafe.JWT.CustomerUsersDetailsService;

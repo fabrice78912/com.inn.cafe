@@ -1,0 +1,198 @@
+name: CI/CD Pipeline with SonarQube and AWS ECR
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, test, staging, prod]
+      branch_name:
+        description: "Branch to deploy"
+        required: true
+        default: "main"
+        type: string
+      reset_db:
+        description: "Reset the PostgreSQL database"
+        required: false
+        default: "false"
+        type: boolean
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+  IMAGE_NAME: myapp
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.define.outputs.image_tag }}
+    steps:
+      - name: Validate required secrets
+        run: |
+          test -n "${{ secrets.AWS_ACCESS_KEY_ID }}" || (echo "Missing AWS_ACCESS_KEY_ID"; exit 1)
+          test -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" || (echo "Missing AWS_SECRET_ACCESS_KEY"; exit 1)
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Define image tag
+        id: define
+        run: |
+          DATE=$(date +%Y%m%d)
+          SHORT_SHA=${GITHUB_SHA::8}
+          echo "image_tag=${DATE}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ needs.validate.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ needs.validate.outputs.image_tag }}
+          push: false
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run unit tests
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }} npm test || {
+            echo "Tests failed"; exit 1;
+          }
+
+  scan:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scan Docker image (non-blocking)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}
+          format: table
+          severity: HIGH,CRITICAL
+
+  sonar:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Run SonarQube analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=fabrice78912_com.inn.cafe
+
+  push:
+    needs: [scan, sonar]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Tag & Push image to ECR
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }} \
+            ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}
+
+  promote:
+    if: github.event_name == 'workflow_dispatch'
+    needs: push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Promote Docker image
+        run: |
+          LATEST_TAG="${{ needs.build.outputs.image_tag }}"
+          docker pull ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$LATEST_TAG
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No image found to promote"; exit 1;
+          fi
+
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:$LATEST_TAG \
+            ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.environment }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.environment }}
+
+  reset_db:
+    if: ${{ github.event.inputs.reset_db == 'true' }}
+    needs: promote
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier que le répertoire "database" existe
+        run: |
+          if [ ! -d "./database" ]; then
+            echo "Le répertoire 'database' n'existe pas !"; exit 1;
+          fi
+          echo "Répertoire 'database' trouvé."
+
+      - name: Installer PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Exécuter les scripts SQL
+        run: |
+          echo "Réinitialisation de la base de données PostgreSQL"
+          for script in ./database/*.sql; do
+            echo "Exécution du script: $script"
+            psql ${{ secrets.DATABASE_URL }} -f $script || {
+              echo "Erreur lors de l'exécution de $script"; exit 1;
+            }
+          done
