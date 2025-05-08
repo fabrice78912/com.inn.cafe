@@ -1,4 +1,4 @@
-package com.inn.cafe.serviceImpl;
+package com.inn.cafe.serviceimpl;
 
 import com.inn.cafe.dao.BillDao;
 import com.inn.cafe.dao.CategoryDao;

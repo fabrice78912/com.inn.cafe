@@ -1,4 +1,4 @@
-package com.inn.cafe.serviceImpl;
+package com.inn.cafe.serviceimpl;
 
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Category;
