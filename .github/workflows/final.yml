@@ -24,6 +24,10 @@ on:
         default: "false"
         type: boolean
 
+permissions:     
+  contents: read
+  pull-requests: write
+  
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -32,11 +36,7 @@ env:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read 
-      pull-requests: write  
-
+    runs-on: ubuntu-latest  
     outputs:
       image_tag: ${{ steps.define.outputs.image_tag }}
     steps:
@@ -62,10 +62,6 @@ jobs:
   build:
     needs: validate
     runs-on: ubuntu-latest
-    permissions:
-      contents: read  # autorise juste la lecture du code source
-      pull-requests: write  # si tu veux commenter automatiquement les PR (utile avec SonarQube)
-
     outputs:
       image_tag: ${{ needs.validate.outputs.image_tag }}
     steps:
