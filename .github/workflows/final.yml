@@ -33,6 +33,10 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read 
+      pull-requests: write  
+
     outputs:
       image_tag: ${{ steps.define.outputs.image_tag }}
     steps:
