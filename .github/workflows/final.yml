@@ -58,6 +58,10 @@ jobs:
   build:
     needs: validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # autorise juste la lecture du code source
+      pull-requests: write  # si tu veux commenter automatiquement les PR (utile avec SonarQube)
+
     outputs:
       image_tag: ${{ needs.validate.outputs.image_tag }}
     steps:
