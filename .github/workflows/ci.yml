@@ -2,13 +2,20 @@ name: CI - Build, Scan, Push and Trigger CD
 
 on:
   push:
-    branches: [main, dev]          # Push sur main ou dev
+    branches:
+      - main
+      - dev
+      - 'feature/**'        # Déclenche sur toutes les branches feature/*
   pull_request:
-    branches: [dev, 'rc-*']       # PR vers dev ou rc-*
+    branches:
+      - dev
+      - main
+      - 'rc-*'
+
 
 permissions:
-  id-token: write                 # OIDC pour AWS
-  contents: read                 # Lire repo
+  id-token: write
+  contents: read
 
 jobs:
   build:
@@ -24,27 +31,23 @@ jobs:
       ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'dev' && 'dev' || 'feature' }}
 
     steps:
-      # 1. Checkout
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Nécessaire pour SonarCloud
+          fetch-depth: 0
 
-      # 2. Configure AWS via OIDC
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRRole
           aws-region: ${{ env.AWS_REGION }}
 
-      # 3. Setup Java 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # 4. Cache Sonar packages
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
@@ -52,7 +55,6 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # 5. Cache Maven packages
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -60,14 +62,14 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      # 6. Set Docker image tag
-      - name: Set environment tag
+      - name: Set Docker image tag
         id: tag
         run: |
           SHA=$(echo ${{ github.sha }} | cut -c1-8)
-          BRANCH="${{ github.ref }}"
+          BRANCH=${GITHUB_REF#refs/heads/}
+
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            BASE="${{ github.base_ref }}"
+            BASE=${{ github.base_ref }}
             if [[ "$BASE" == "dev" ]]; then
               TAG="feature-${SHA}"
             elif [[ "$BASE" == rc-* ]]; then
@@ -75,16 +77,19 @@ jobs:
             else
               TAG="pr-${SHA}"
             fi
-          elif [[ "$BRANCH" == "refs/heads/main" ]]; then
+          elif [[ "$BRANCH" == "main" ]]; then
             TAG="prod-${SHA}"
-          elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
+          elif [[ "$BRANCH" == "dev" ]]; then
             TAG="dev-${SHA}"
+          elif [[ "$BRANCH" == feature/* ]]; then
+            FEATURE_NAME=${BRANCH#feature/}
+            TAG="feature-${FEATURE_NAME}-${SHA}"
           else
             TAG="unknown-${SHA}"
           fi
+
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      # 7. SonarCloud analysis
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -92,35 +97,27 @@ jobs:
         with:
           projectBaseDir: .
 
-      # 8. Build and test Maven
       - name: Build and Test
         run: mvn clean install -DskipTests=false
 
-      # 9. Login to Amazon ECR
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      # 10. Build Docker image
       - name: Build Docker image
-        run: |
-          docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+        run: docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
 
-      # 11. Scan Docker image with Trivy
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
-          format: 'table'
-          exit-code: '1' # Fail if Critical or High vuln found
-          severity: 'CRITICAL,HIGH'
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
 
-      # 12. Push Docker image
       - name: Push Docker image
-        run: |
-          docker push ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
+        run: docker push ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
 
-      # 13. Trigger CD workflow in another repo
-      - name: Trigger CD
+      - name: Trigger CD workflow in another repo
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ env.PERSONAL_ACCESS_TOKEN }}
