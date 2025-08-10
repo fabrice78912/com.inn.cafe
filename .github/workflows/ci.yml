@@ -1,24 +1,162 @@
-name: CI Pipeline
+name: CI - Build, Scan, Push and Trigger CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main, dev]          # Push sur main ou dev
+  pull_request:
+    branches: [dev, 'rc-*']       # PR vers dev ou rc-*
+
+permissions:
+  id-token: write                 # OIDC pour AWS
+  contents: read                 # Lire repo
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
-      - name: Login Dockerhub
-        env:
-          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
-          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-        run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      ECR_REPO: ${{ secrets.ECR_REPO }}
+      PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
+      ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'dev' && 'dev' || 'feature' }}
 
-      - name: Build the Docker image
-        run: docker build -t fabrice7891/cafe-system .
-      - name: Push to Dockerhub
-        run: docker push fabrice7891/cafe-system:latest
+    steps:
+      # 1. Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Nécessaire pour SonarCloud
+
+      # 2. Configure AWS via OIDC
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3. Setup Java 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 4. Cache Sonar packages
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      # 5. Cache Maven packages
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      # 6. Set Docker image tag
+      - name: Set environment tag
+        id: tag
+        run: |
+          SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          BRANCH="${{ github.ref }}"
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            BASE="${{ github.base_ref }}"
+            if [[ "$BASE" == "dev" ]]; then
+              TAG="feature-${SHA}"
+            elif [[ "$BASE" == rc-* ]]; then
+              TAG="staging-${SHA}"
+            else
+              TAG="pr-${SHA}"
+            fi
+          elif [[ "$BRANCH" == "refs/heads/main" ]]; then
+            TAG="prod-${SHA}"
+          elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
+            TAG="dev-${SHA}"
+          else
+            TAG="unknown-${SHA}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      # 7. SonarCloud analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+
+      # 8. Build and test Maven
+      - name: Build and Test
+        run: mvn clean install -DskipTests=false
+
+      # 9. Login to Amazon ECR
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 10. Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+
+      # 11. Scan Docker image with Trivy
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
+          format: 'table'
+          exit-code: '1' # Fail if Critical or High vuln found
+          severity: 'CRITICAL,HIGH'
+
+      # 12. Push Docker image
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
+
+      # 13. Trigger CD workflow in another repo
+      - name: Trigger CD
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ env.PERSONAL_ACCESS_TOKEN }}
+          repository: ${{ env.REPO_DEPLOY }}
+          event-type: deploy
+          client-payload: >-
+            {
+              "branch": "${{ github.ref_name }}",
+              "image_tag": "${{ steps.tag.outputs.tag }}",
+              "environment": "${{ env.ENV }}",
+              "microservice": "microservice-a"
+            }
+
+
+
+#name: CI Pipeline
+#
+#on:
+#  push:
+#    branches: [ "main" ]
+#
+#jobs:
+#
+#  build:
+#
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Login Dockerhub
+#        env:
+#          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+#          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+#        run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+#
+#      - name: Build the Docker image
+#        run: docker build -t fabrice7891/cafe-system .
+#      - name: Push to Dockerhub
+#        run: docker push fabrice7891/cafe-system:latest
