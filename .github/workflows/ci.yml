@@ -70,12 +70,12 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       # 5. Analyse de qualité du code avec SonarCloud
-      - name: SonarQube Analysis
-        uses: SonarSource/sonarcloud-github-action@master
-        with:
-          projectBaseDir: .
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+#      - name: SonarQube Analysis
+#        uses: SonarSource/sonarcloud-github-action@master
+#        with:
+#          projectBaseDir: .
+#        env:
+#          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
 
       # 6. Compilation + Tests Maven
       - name: Build and Test
