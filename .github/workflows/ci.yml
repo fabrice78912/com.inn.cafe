@@ -68,6 +68,12 @@ jobs:
       - name: Build and Test
         run: mvn clean install -DskipTests=false
 
+      - name: Create ECR repository if not exists
+        run: |
+          aws ecr describe-repositories --repository-names touchtunes || aws ecr create-repository --repository-name touchtunes
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
