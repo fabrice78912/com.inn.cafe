@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 public class BillRestImpl implements BillRest {
 
-    @Autowired
+   /* @Autowired
     private BillService billService;
 
     @Override
@@ -43,7 +43,7 @@ public class BillRestImpl implements BillRest {
 
     }
 
-    @Override
+*//*    @Override
     public ResponseEntity<byte[]> getPdf(Map<String, Object> requestMap) {
         try {
             return billService.getPdf(requestMap);
@@ -52,7 +52,7 @@ public class BillRestImpl implements BillRest {
         }
         return  null;
 
-    }
+    }*//*
 
     @Override
     public ResponseEntity<String> deleteBill(Integer id) {
@@ -62,5 +62,5 @@ public class BillRestImpl implements BillRest {
             ex.printStackTrace();
         }
         return  CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    }*/
 }
