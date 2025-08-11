@@ -1,9 +1,9 @@
 package com.inn.cafe.serviceImpl;
 
-import com.amazonaws.services.s3.AmazonS3;
+/*import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;*/
 import com.inn.cafe.JWT.JwtFilter;
 import com.inn.cafe.POJO.Bill;
 import com.inn.cafe.constents.CafeConstants;
@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class BillServiceImpl implements BillService {
 
-    @Autowired
+   /* @Autowired
     private JwtFilter jwtFilter;
 
     @Autowired
@@ -46,14 +46,14 @@ public class BillServiceImpl implements BillService {
     @Value("${location.store}")
     private String storeLocation;
 
-    @Autowired
-    private AmazonS3 s3Client;
+*//*    @Autowired
+    private AmazonS3 s3Client;*//*
 
     @Value("${application.bucket.name}")
     private String bucketName;
 
 
-    @Override
+    *//*@Override
     public ResponseEntity<String> generateReport(Map<String, Object> requestMap) {
 
         log.info("inside ");
@@ -117,7 +117,7 @@ public class BillServiceImpl implements BillService {
             ex.printStackTrace();
         }
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    }*//*
 
 
     private void addRows(PdfPTable table, Map<String, Object> data) {
@@ -214,7 +214,7 @@ public class BillServiceImpl implements BillService {
         return new ResponseEntity<>(bills, HttpStatus.OK);
     }
 
-    @Override
+    *//*@Override
     public ResponseEntity<byte[]> getPdf(Map<String, Object> requestMap) {
         log.info(" Inside getPdf : requestMap {}", requestMap);
         try {
@@ -241,9 +241,9 @@ public class BillServiceImpl implements BillService {
         }
         return null;
     }
+*//*
 
-
-    public byte[] downloadFile(String fileName) {
+    *//*public byte[] downloadFile(String fileName) {
         S3Object s3Object = s3Client.getObject(bucketName, fileName);
         S3ObjectInputStream inputStream = s3Object.getObjectContent();
         try {
@@ -253,7 +253,7 @@ public class BillServiceImpl implements BillService {
             e.printStackTrace();
         }
         return null;
-    }
+    }*//*
 
 
     private byte[] getByArray(String filePath) throws Exception {
@@ -279,14 +279,14 @@ public class BillServiceImpl implements BillService {
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-
+*//*
     public String uploadFile(File file) {
         String fileName = System.currentTimeMillis() + "_" + file.getName();
         s3Client.putObject(new PutObjectRequest(bucketName , fileName, file));
         file.delete();
         return "File uploaded : " + fileName;
-    }
+    }*//*
 
-
+*/
 
 }

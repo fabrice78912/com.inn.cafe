@@ -13,4 +13,3 @@ COPY --from=maven-builder ./app/target/cafe-app.jar .
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "cafe-app.jar"]
-CMD ["tail", "-f", "/dev/null"]

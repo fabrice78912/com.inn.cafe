@@ -11,7 +11,7 @@ import java.util.Map;
 @RequestMapping(path = "/bill")
 public interface BillRest {
 
-    @PostMapping(path = "/generateReport")
+   /* @PostMapping(path = "/generateReport")
     public ResponseEntity<String> generateReport(@RequestBody(required = true) Map<String, Object> requestMap);
 
     @GetMapping(path = "/getBills")
@@ -20,9 +20,8 @@ public interface BillRest {
     @PostMapping(path = "/getPdf")
     public ResponseEntity<byte[]> getPdf(@RequestBody(required = true) Map<String, Object> requestMap);
 
-
     @DeleteMapping(path = "/delete/{id}")
-    public ResponseEntity<String> deleteBill(@PathVariable("id") Integer id);
+    public ResponseEntity<String> deleteBill(@PathVariable("id") Integer id);*/
 
 
 }
