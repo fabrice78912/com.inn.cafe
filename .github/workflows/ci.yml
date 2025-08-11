@@ -44,26 +44,49 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set environment tag
+#      - name: Set environment tag
+#        id: tag
+#        run: |
+#          SHA=$(echo ${{ github.sha }} | cut -c1-8)
+#          BRANCH="${{ github.ref }}"
+#          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+#            BASE="${{ github.base_ref }}"
+#            if [[ "$BASE" == "dev" ]]; then
+#              TAG="feature-${SHA}"
+#            elif [[ "$BASE" == rc-* ]]; then
+#              TAG="staging-${SHA}"
+#            else
+#              TAG="pr-${SHA}"
+#            fi
+#          elif [[ "$BRANCH" == "refs/heads/main" ]]; then
+#            TAG="prod-${SHA}"
+#          elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
+#            TAG="dev-${SHA}"
+#          else
+#            TAG="unknown-${SHA}"
+#          fi
+#          echo "tag=$TAG" >> $GITHUB_OUTPUT
+      - name: Set environment tag with date
         id: tag
         run: |
           SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          DATE=$(date +%Y%m%d)              
           BRANCH="${{ github.ref }}"
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BASE="${{ github.base_ref }}"
             if [[ "$BASE" == "dev" ]]; then
-              TAG="feature-${SHA}"
+              TAG="feature-${SHA}-${DATE}"  
             elif [[ "$BASE" == rc-* ]]; then
-              TAG="staging-${SHA}"
+              TAG="staging-${SHA}-${DATE}"  
             else
-              TAG="pr-${SHA}"
+              TAG="pr-${SHA}-${DATE}"       
             fi
           elif [[ "$BRANCH" == "refs/heads/main" ]]; then
-            TAG="prod-${SHA}"
+            TAG="prod-${SHA}-${DATE}"      
           elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
-            TAG="dev-${SHA}"
+            TAG="dev-${SHA}-${DATE}"        
           else
-            TAG="unknown-${SHA}"
+            TAG="unknown-${SHA}-${DATE}"    
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
