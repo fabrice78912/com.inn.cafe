@@ -70,6 +70,9 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Test docker login
+        run: docker info
+
       - name: Debug ECR_REPO and Tag
         run: |
           echo "ECR_REPO='${{ env.ECR_REPO }}'"
