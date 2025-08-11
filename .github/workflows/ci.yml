@@ -70,11 +70,11 @@ jobs:
       - name: Build and Test
         run: mvn clean install -DskipTests=false
 
-      - name: Create ECR repository if not exists
-        run: |
-          aws ecr describe-repositories --repository-names ${{ env.REPO_NAME }} || aws ecr create-repository --repository-name ${{ env.REPO_NAME }}
-        env:
-          AWS_REGION: ${{ env.AWS_REGION }}
+#      - name: Create ECR repository if not exists
+#        run: |
+#          aws ecr describe-repositories --repository-names ${{ env.REPO_NAME }} || aws ecr create-repository --repository-name ${{ env.REPO_NAME }}
+#        env:
+#          AWS_REGION: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
