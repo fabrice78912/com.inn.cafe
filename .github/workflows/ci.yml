@@ -88,7 +88,8 @@ jobs:
       # 8. Construction de l'image Docker
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+#          docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+          docker buildx build --tag ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} --load .
 
       # 9. Scan sécurité de l'image avec Trivy
 #      - name: Scan Docker image with Trivy
