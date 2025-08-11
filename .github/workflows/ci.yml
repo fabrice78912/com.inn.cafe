@@ -70,7 +70,7 @@ jobs:
         id: tag
         run: |
           SHA=$(echo ${{ github.sha }} | cut -c1-8)
-          DATE=$(date +%Y%m%d)              
+          DATE=$(date +%Y%m%d-%H%M%S)              
           BRANCH="${{ github.ref }}"
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BASE="${{ github.base_ref }}"
