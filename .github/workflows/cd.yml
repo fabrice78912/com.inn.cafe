@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Delete previous image
-        run: sudo docker rmi cafe-system || true
+        run: sudo docker rmi cafe-cicd || true
       - name: Pull Docker image
         run: sudo docker pull fabrice7891/cafe-system:latest
       - name: Delete Old docker container
         run: sudo docker rm -f cafe-system-container || true
       - name: Run Docker Container
-        run: sudo docker run -dit -p 8080:8080 --name cafe-system-container fabrice7891/cafe-system
+        run: sudo docker run -d -p 8081:8081 --name cafe-system-container fabrice7891/cafe-system
