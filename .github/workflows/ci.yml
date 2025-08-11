@@ -76,8 +76,18 @@ jobs:
           echo "TAG='${{ steps.tag.outputs.tag }}'"
 
       - name: Build Docker image
-          run: |
-            docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+        run: |
+          docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+
+      # Utilisation de l’action officielle docker/build-push-action avec contexte configuré
+#      - name: Build and push Docker image
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: .                  # IMPORTANT : dossier de build
+#          push: true                 # Push automatique après build
+#          tags: ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
+
+
 
       # Optionnel : déclencher workflow CD
       - name: Trigger CD
