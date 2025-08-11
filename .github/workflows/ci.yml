@@ -89,7 +89,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+          docker build -t $ECR_REGISTRY/touchtunes:${{ steps.tag.outputs.tag }} .
           
       - name: List local Docker images
         run: docker images
@@ -97,7 +97,7 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker push ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
+          docker push $ECR_REGISTRY/touchtunes:${{ steps.tag.outputs.tag }}
 
       # Optionnel : déclencher workflow CD
       - name: Trigger CD
