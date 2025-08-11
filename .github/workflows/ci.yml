@@ -23,6 +23,7 @@ jobs:
       REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
       ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'dev' && 'dev' || 'feature' }}
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      REPO_NAME: ${{ secrets.REPO_NAME }}
 
     steps:
       - name: Checkout
@@ -70,7 +71,7 @@ jobs:
 
       - name: Create ECR repository if not exists
         run: |
-          aws ecr describe-repositories --repository-names touchtunes || aws ecr create-repository --repository-name touchtunes
+          aws ecr describe-repositories --repository-names ${{ env.REPO_NAME }} || aws ecr create-repository --repository-name ${{ env.REPO_NAME }}
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
 
@@ -94,12 +95,12 @@ jobs:
         run: |
           echo "ECR_REPO='${{ env.ECR_REPO }}'"
           echo "TAG='${{ steps.tag.outputs.tag }}'"
-          echo "Full image name: $ECR_REGISTRY/touchtunes:${{ steps.tag.outputs.tag }}"
+          echo "Full image name: $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}"
           
 
       - name: Build Docker image
         run: |
-          docker build -t $ECR_REGISTRY/touchtunes:${{ steps.tag.outputs.tag }} .
+          docker build -t $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }} .
           
       - name: List local Docker images
         run: docker images
@@ -107,7 +108,7 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker push $ECR_REGISTRY/touchtunes:${{ steps.tag.outputs.tag }}
+          docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
 
       # Optionnel : déclencher workflow CD
       - name: Trigger CD
