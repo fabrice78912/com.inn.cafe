@@ -1,5 +1,5 @@
 # Étape 1: Builder avec Maven (plus léger)
-FROM maven:3.8.6-openjdk-17-slim AS builder
+FROM maven:3.8.5-openjdk-17-slim AS builder
 
 WORKDIR /app
 
@@ -21,6 +21,7 @@ COPY --from=builder /app/target/cafe-app.jar .
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "cafe-app.jar"]
+
 
 #
 ## Step 1: Builder le projet avec maven
