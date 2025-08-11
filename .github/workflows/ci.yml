@@ -73,6 +73,10 @@ jobs:
           region: ${{ env.AWS_REGION }}
           registry: ${{ env.ECR_REPO }}
 
+      - name: Authenticate Docker with AWS ECR (manual)
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REPO }}
+
       - name: Test docker login
         run: docker info
 
