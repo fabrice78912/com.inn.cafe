@@ -94,9 +94,10 @@ jobs:
 
       - name: Debug ECR_REPO and Tag
         run: |
-          echo "ECR_REPO='${{ env.ECR_REPO }}'"
+          echo "ECR_REPO='${{ github.ref_name }}'"
           echo "TAG='${{ steps.tag.outputs.tag }}'"
           echo "Full image name: $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}"
+          echo "ECR_REPO='${{ env.ECR_REPO }}'"
           
 
       - name: Build Docker image
