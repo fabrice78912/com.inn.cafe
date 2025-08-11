@@ -95,6 +95,8 @@ jobs:
         run: |
           echo "ECR_REPO='${{ env.ECR_REPO }}'"
           echo "TAG='${{ steps.tag.outputs.tag }}'"
+          echo "Full image name: $ECR_REGISTRY/touchtunes:${{ steps.tag.outputs.tag }}"
+          
 
       - name: Build Docker image
         run: |
