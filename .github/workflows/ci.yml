@@ -109,7 +109,7 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker build -t 12398089744.dkr.ecr.ca-centra-b.amazonaws.com/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
+          docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
 
       # Optionnel : déclencher workflow CD
       - name: Trigger CD
