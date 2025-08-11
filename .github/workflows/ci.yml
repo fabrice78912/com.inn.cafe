@@ -78,6 +78,11 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }} .
+          
+          
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.ECR_REPO }}:${{ steps.tag.outputs.tag }}
 
       # Utilisation de l’action officielle docker/build-push-action avec contexte configuré
 #      - name: Build and push Docker image
