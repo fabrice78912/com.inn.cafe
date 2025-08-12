@@ -2,9 +2,9 @@ name: CI - Build, Scan, Push and Trigger CD
 
 on:
   push:
-    branches: [main, dev, staging, 'rc-*']
+    branches: [main, dev]
   pull_request:
-    branches: [main, dev, 'rc-*']
+    branches: [dev, 'rc-*']
   workflow_dispatch:
 
 permissions:
