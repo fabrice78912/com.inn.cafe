@@ -13,8 +13,11 @@ permissions:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  ECR_REPO: ${{ secrets.ECR_REPO }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
+  ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'dev' && 'dev' || 'feature' }}
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
   REPO_NAME: ${{ secrets.REPO_NAME }}
 
@@ -65,14 +68,17 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BASE="${{ github.base_ref }}"
             if [[ "$BASE" == "dev" ]]; then
-              TAG="feature-${SHA}-${DATE}"
+              TAG="feature-dev-${SHA}-${DATE}"
               ENV="feature"
             elif [[ "$BASE" == rc-* ]]; then
-              TAG="staging-${SHA}-${DATE}"
+              TAG="feature-staging-${SHA}-${DATE}"
               ENV="staging"
+            elif [[ "$BASE" == "main" ]]; then
+              TAG="feature-prod-${SHA}-${DATE}"
+              ENV="prod"
             else
-              TAG="pr-${SHA}-${DATE}"
-              ENV="pr"
+              TAG="feature-${BASE}-${SHA}-${DATE}"
+              ENV="feature"
             fi
           else
             BRANCH="${{ github.ref }}"
@@ -82,10 +88,13 @@ jobs:
             elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
               TAG="dev-${SHA}-${DATE}"
               ENV="dev"
+            else [[ "$BRANCH" == "refs/heads/rc-*" ]]; then
+              TAG="staging-${SHA}-${DATE}"
+              ENV="staging"
             else
               TAG="unknown-${SHA}-${DATE}"
               ENV="unknown"
-            fi
+            fi 
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "env=$ENV" >> $GITHUB_OUTPUT
