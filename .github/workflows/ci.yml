@@ -17,7 +17,6 @@ env:
   ECR_REPO: ${{ secrets.ECR_REPO }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
-#  ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'dev' && 'dev' || 'feature' }}
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
   REPO_NAME: ${{ secrets.REPO_NAME }}
 
