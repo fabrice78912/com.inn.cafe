@@ -45,6 +45,7 @@ jobs:
       #   run: sonar-scanner
 
   build-push:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     needs: verify
     runs-on: ubuntu-latest
     steps:
