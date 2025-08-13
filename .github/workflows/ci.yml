@@ -67,7 +67,7 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BASE="${{ github.base_ref }}"
             if [[ "$BASE" == "dev" ]]; then
-              TAG="feature-dev-${SHA}-${DATE}"
+              TAG="feature-${BASE}-${SHA}-${DATE}"
               ENV="feature"
             elif [[ "$BASE" == rc-* ]]; then
               TAG="feature-staging-${SHA}-${DATE}"
@@ -100,6 +100,8 @@ jobs:
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: true
 
       - name: Push Docker image
         run: docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
