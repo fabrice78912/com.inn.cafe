@@ -1,5 +1,6 @@
 name: 'CI - Build, Scan, Push and Trigger CD'
-'on':
+
+on:
   push:
     branches:
       - main
@@ -12,9 +13,11 @@ name: 'CI - Build, Scan, Push and Trigger CD'
       - dev
       - rc-*
   workflow_dispatch:
+
 permissions:
   id-token: write
   contents: read
+
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -22,13 +25,14 @@ env:
   ECR_REPO: ${{ secrets.ECR_REPO }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
-  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION}}.amazonaws.com
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
   REPO_NAME: ${{ secrets.REPO_NAME }}
+
 jobs:
   detect-branch:
     runs-on: ubuntu-latest
     outputs:
-      is-first-push: '${{ steps.check.outputs.is_first_push }}'
+      is-first-push: ${{ steps.check.outputs.is_first_push }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,17 +40,13 @@ jobs:
           fetch-depth: 0
       - name: Vérifier si la branche existe déjà sur remote
         id: check
-        run: >
+        run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-
-          # Vérifie si la branche existe déjà sur remote
-
-          if git ls-remote --heads origin "$BRANCH_NAME" | grep "$BRANCH_NAME";
-          then
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep "$BRANCH_NAME"; then
             echo "is_first_push=false" >> $GITHUB_OUTPUT
           else
             echo "is_first_push=true" >> $GITHUB_OUTPUT
-          fi
+
   verify:
     needs: detect-branch
     runs-on: ubuntu-latest
@@ -60,6 +60,7 @@ jobs:
           distribution: temurin
       - name: Build and run tests
         run: mvn clean install -DskipTests=false
+
   build-push:
     needs: verify
     runs-on: ubuntu-latest
@@ -67,19 +68,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: 'arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRRole'
           aws-region: '${{ env.AWS_REGION }}'
+
       - name: Set environment tag with date
         id: set-env
         run: |
           SHA=$(echo "${GITHUB_SHA}" | cut -c1-8)
           DATE=$(date +%Y%m%d-%H%M%S)
-               
+
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-          BASE="${GITHUB_BASE_REF}"
+            BASE="${GITHUB_BASE_REF}"
             if [[ "$BASE" == "dev" ]]; then
               ENV="feature"
               TAG="feature-${SHA}-${DATE}"
@@ -93,9 +96,8 @@ jobs:
               ENV="dev"
               TAG="dev-${SHA}-${DATE}"
             fi
-               
           elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
-          REF="${GITHUB_REF}"
+            REF="${GITHUB_REF}"
             if [[ "$REF" == "refs/heads/dev" ]]; then
               ENV="dev"
               TAG="dev-${SHA}-${DATE}"
@@ -112,87 +114,30 @@ jobs:
               ENV="unknown"
               TAG="unknown-${SHA}-${DATE}"
             fi
-               
           else
             ENV="dev"
             TAG="dev-${SHA}-${DATE}"
           fi
+
           echo "ENV=$ENV" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
-               
-#      - name: Set environment tag with date
-#        id: set-env
-#        run: |
-#          SHA=$(echo "${GITHUB_SHA}" | cut -c1-8)
-#          DATE=$(date +%Y%m%d-%H%M%S)
-#
-#          case "${GITHUB_EVENT_NAME}" in
-#            pull_request)
-#              BASE="${GITHUB_BASE_REF}"
-#              case "$BASE" in
-#                dev)
-#                  ENV="feature"
-#                  TAG="feature-${SHA}-${DATE}"
-#                  ;;
-#                rc-*)
-#                  ENV="staging"
-#                  TAG="staging-${SHA}-${DATE}"
-#                  ;;
-#                main)
-#                  ENV="prod"
-#                  TAG="prod-${SHA}-${DATE}"
-#                  ;;
-#                *)
-#                  ENV="dev"
-#                  TAG="dev-${SHA}-${DATE}"
-#                  ;;
-#              esac
-#              ;;
-#            push)
-#              REF="${GITHUB_REF}"
-#              case "$REF" in
-#                refs/heads/dev)
-#                  ENV="dev"
-#                  TAG="dev-${SHA}-${DATE}"
-#                  ;;
-#                refs/heads/rc-*)
-#                  ENV="staging"
-#                  TAG="staging-${SHA}-${DATE}"
-#                  ;;
-#                refs/heads/main)
-#                  ENV="prod"
-#                  TAG="prod-${SHA}-${DATE}"
-#                  ;;
-#                refs/heads/feature/*)
-#                  ENV="dev"
-#                  TAG="dev-${SHA}-${DATE}"
-#                  ;;
-#                *)
-#                  ENV="unknown"
-#                  TAG="unknown-${SHA}-${DATE}"
-#                  ;;
-#              esac
-#              ;;
-#            *)
-#              ENV="dev"
-#              TAG="dev-${SHA}-${DATE}"
-#              ;;
-#          esac
-#
-#          echo "ENV=$ENV" >> $GITHUB_ENV
-#          echo "TAG=$TAG" >> $GITHUB_ENV
+
       - name: Build Docker image
+        if: ${{ github.event_name == 'pull_request' || needs.detect-branch.outputs.is-first-push == 'false' }}
         run: docker build -t $ECR_REGISTRY/${{ env.REPO_NAME }}:$TAG .
 
       - name: Login to Amazon ECR
+        if: ${{ github.event_name == 'pull_request' || needs.detect-branch.outputs.is-first-push == 'false' }}
         uses: aws-actions/amazon-ecr-login@v1
         with:
           mask-password: true
 
       - name: Push Docker image
+        if: ${{ github.event_name == 'pull_request' || needs.detect-branch.outputs.is-first-push == 'false' }}
         run: docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:$TAG
 
       - name: Trigger CD
+        if: ${{ github.event_name == 'pull_request' || needs.detect-branch.outputs.is-first-push == 'false' }}
         uses: peter-evans/repository-dispatch@v2
         with:
           token: '${{ env.PERSONAL_ACCESS_TOKEN }}'
@@ -201,10 +146,219 @@ jobs:
           client-payload: |
             {
               "branch": "${{ github.ref_name }}",
-              "image_tag": "${{ steps.tag.outputs.tag }}",
-              "environment": "${{ steps.tag.outputs.env }}",
+              "image_tag": "$TAG",
+              "environment": "$ENV",
               "microservice": "microservice-a"
             }
+
+
+#name: 'CI - Build, Scan, Push and Trigger CD'
+#'on':
+#  push:
+#    branches:
+#      - main
+#      - dev
+#      - rc-*
+#      - feature/*
+#  pull_request:
+#    branches:
+#      - main
+#      - dev
+#      - rc-*
+#  workflow_dispatch:
+#permissions:
+#  id-token: write
+#  contents: read
+#env:
+#  AWS_REGION: ${{ secrets.AWS_REGION }}
+#  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+#  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#  ECR_REPO: ${{ secrets.ECR_REPO }}
+#  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+#  REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
+#  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION}}.amazonaws.com
+#  REPO_NAME: ${{ secrets.REPO_NAME }}
+#jobs:
+#  detect-branch:
+#    runs-on: ubuntu-latest
+#    outputs:
+#      is-first-push: '${{ steps.check.outputs.is_first_push }}'
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#      - name: Vérifier si la branche existe déjà sur remote
+#        id: check
+#        run: >
+#          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+#
+#          # Vérifie si la branche existe déjà sur remote
+#
+#          if git ls-remote --heads origin "$BRANCH_NAME" | grep "$BRANCH_NAME";
+#          then
+#            echo "is_first_push=false" >> $GITHUB_OUTPUT
+#          else
+#            echo "is_first_push=true" >> $GITHUB_OUTPUT
+#          fi
+#  verify:
+#    needs: detect-branch
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#      - name: Set up JDK 17
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '17'
+#          distribution: temurin
+#      - name: Build and run tests
+#        run: mvn clean install -DskipTests=false
+#  build-push:
+#    needs: verify
+#    runs-on: ubuntu-latest
+#    if: ${{ needs.detect-branch.outputs.is-first-push == 'false' || github.event_name == 'pull_request' }}
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#      - name: Configure AWS credentials (OIDC)
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          role-to-assume: 'arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRRole'
+#          aws-region: '${{ env.AWS_REGION }}'
+#      - name: Set environment tag with date
+#        id: set-env
+#        run: |
+#          SHA=$(echo "${GITHUB_SHA}" | cut -c1-8)
+#          DATE=$(date +%Y%m%d-%H%M%S)
+#
+#          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+#          BASE="${GITHUB_BASE_REF}"
+#            if [[ "$BASE" == "dev" ]]; then
+#              ENV="feature"
+#              TAG="feature-${SHA}-${DATE}"
+#            elif [[ "$BASE" == rc-* ]]; then
+#              ENV="staging"
+#              TAG="staging-${SHA}-${DATE}"
+#            elif [[ "$BASE" == "main" ]]; then
+#              ENV="prod"
+#              TAG="prod-${SHA}-${DATE}"
+#            else
+#              ENV="dev"
+#              TAG="dev-${SHA}-${DATE}"
+#            fi
+#
+#          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+#          REF="${GITHUB_REF}"
+#            if [[ "$REF" == "refs/heads/dev" ]]; then
+#              ENV="dev"
+#              TAG="dev-${SHA}-${DATE}"
+#            elif [[ "$REF" == rc-* || "$REF" == refs/heads/rc-* ]]; then
+#              ENV="staging"
+#              TAG="staging-${SHA}-${DATE}"
+#            elif [[ "$REF" == "refs/heads/main" ]]; then
+#              ENV="prod"
+#              TAG="prod-${SHA}-${DATE}"
+#            elif [[ "$REF" == refs/heads/feature/* ]]; then
+#              ENV="dev"
+#              TAG="dev-${SHA}-${DATE}"
+#            else
+#              ENV="unknown"
+#              TAG="unknown-${SHA}-${DATE}"
+#            fi
+#
+#          else
+#            ENV="dev"
+#            TAG="dev-${SHA}-${DATE}"
+#          fi
+#          echo "ENV=$ENV" >> $GITHUB_ENV
+#          echo "TAG=$TAG" >> $GITHUB_ENV
+#
+##      - name: Set environment tag with date
+##        id: set-env
+##        run: |
+##          SHA=$(echo "${GITHUB_SHA}" | cut -c1-8)
+##          DATE=$(date +%Y%m%d-%H%M%S)
+##
+##          case "${GITHUB_EVENT_NAME}" in
+##            pull_request)
+##              BASE="${GITHUB_BASE_REF}"
+##              case "$BASE" in
+##                dev)
+##                  ENV="feature"
+##                  TAG="feature-${SHA}-${DATE}"
+##                  ;;
+##                rc-*)
+##                  ENV="staging"
+##                  TAG="staging-${SHA}-${DATE}"
+##                  ;;
+##                main)
+##                  ENV="prod"
+##                  TAG="prod-${SHA}-${DATE}"
+##                  ;;
+##                *)
+##                  ENV="dev"
+##                  TAG="dev-${SHA}-${DATE}"
+##                  ;;
+##              esac
+##              ;;
+##            push)
+##              REF="${GITHUB_REF}"
+##              case "$REF" in
+##                refs/heads/dev)
+##                  ENV="dev"
+##                  TAG="dev-${SHA}-${DATE}"
+##                  ;;
+##                refs/heads/rc-*)
+##                  ENV="staging"
+##                  TAG="staging-${SHA}-${DATE}"
+##                  ;;
+##                refs/heads/main)
+##                  ENV="prod"
+##                  TAG="prod-${SHA}-${DATE}"
+##                  ;;
+##                refs/heads/feature/*)
+##                  ENV="dev"
+##                  TAG="dev-${SHA}-${DATE}"
+##                  ;;
+##                *)
+##                  ENV="unknown"
+##                  TAG="unknown-${SHA}-${DATE}"
+##                  ;;
+##              esac
+##              ;;
+##            *)
+##              ENV="dev"
+##              TAG="dev-${SHA}-${DATE}"
+##              ;;
+##          esac
+##
+##          echo "ENV=$ENV" >> $GITHUB_ENV
+##          echo "TAG=$TAG" >> $GITHUB_ENV
+#      - name: Build Docker image
+#        run: docker build -t $ECR_REGISTRY/${{ env.REPO_NAME }}:$TAG .
+#
+#      - name: Login to Amazon ECR
+#        uses: aws-actions/amazon-ecr-login@v1
+#        with:
+#          mask-password: true
+#
+#      - name: Push Docker image
+#        run: docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:$TAG
+#
+#      - name: Trigger CD
+#        uses: peter-evans/repository-dispatch@v2
+#        with:
+#          token: '${{ env.PERSONAL_ACCESS_TOKEN }}'
+#          repository: '${{ env.REPO_DEPLOY }}'
+#          event-type: deploy
+#          client-payload: |
+#            {
+#              "branch": "${{ github.ref_name }}",
+#              "image_tag": "${{ steps.tag.outputs.tag }}",
+#              "environment": "${{ steps.tag.outputs.env }}",
+#              "microservice": "microservice-a"
+#            }
 
 
 #name: CI - Build, Scan, Push and Trigger CD
