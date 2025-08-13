@@ -2,18 +2,24 @@ name: CI - Build, Scan, Push and Trigger CD
 
 on:
   push:
-    branches: ['**']
+    branches: ['**']        # Toutes les branches
   pull_request:
-    branches: [main, dev, 'rc-*']
-  workflow_dispatch:
+    branches: ['**']        # Toutes les branches aussi
 
 permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+  REPO_NAME: ${{ secrets.REPO_NAME }}
+
 jobs:
   verify:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,16 +36,13 @@ jobs:
       - name: Build and run tests
         run: mvn clean install -DskipTests=false
 
-#      - name: Run code analysis (SonarQube example)
-#        env:
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#        run: |
-#          # Exemple de commande SonarQube scanner
-#          sonar-scanner
-#          # Ajouter ici d'autres vérifications (lint, sécurité, etc.)
+      # Optionnel : Analyse SonarQube ou autres vérifications
+      # - name: Run SonarQube scanner
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   run: sonar-scanner
 
   build-push:
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
     needs: verify
     runs-on: ubuntu-latest
     steps:
@@ -58,36 +61,43 @@ jobs:
         id: tag
         run: |
           SHA=$(echo ${{ github.sha }} | cut -c1-8)
-          DATE=$(date +%Y%m%d-%H%M%S)              
-          BRANCH="${{ github.ref }}"
+          DATE=$(date +%Y%m%d-%H%M%S)
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BASE="${{ github.base_ref }}"
             if [[ "$BASE" == "dev" ]]; then
-              TAG="feature-${SHA}-${DATE}"  
+              TAG="feature-${SHA}-${DATE}"
+              ENV="feature"
             elif [[ "$BASE" == rc-* ]]; then
-              TAG="staging-${SHA}-${DATE}"  
+              TAG="staging-${SHA}-${DATE}"
+              ENV="staging"
             else
-              TAG="pr-${SHA}-${DATE}"       
+              TAG="pr-${SHA}-${DATE}"
+              ENV="pr"
             fi
-          elif [[ "$BRANCH" == "refs/heads/main" ]]; then
-            TAG="prod-${SHA}-${DATE}"      
-          elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
-            TAG="dev-${SHA}-${DATE}"        
           else
-            TAG="unknown-${SHA}-${DATE}"    
+            BRANCH="${{ github.ref }}"
+            if [[ "$BRANCH" == "refs/heads/main" ]]; then
+              TAG="prod-${SHA}-${DATE}"
+              ENV="prod"
+            elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
+              TAG="dev-${SHA}-${DATE}"
+              ENV="dev"
+            else
+              TAG="unknown-${SHA}-${DATE}"
+              ENV="unknown"
+            fi
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "env=$ENV" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
-        run: |
-          docker build -t $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }} .
+        run: docker build -t $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }} .
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Push Docker image
-        run: |
-          docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
+        run: docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
 
       - name: Trigger CD
         uses: peter-evans/repository-dispatch@v2
@@ -95,10 +105,10 @@ jobs:
           token: ${{ env.PERSONAL_ACCESS_TOKEN }}
           repository: ${{ env.REPO_DEPLOY }}
           event-type: deploy
-          client-payload: >-
+          client-payload: |
             {
               "branch": "${{ github.ref_name }}",
               "image_tag": "${{ steps.tag.outputs.tag }}",
-              "environment": "${{ env.ENV }}",
+              "environment": "${{ steps.tag.outputs.env }}",
               "microservice": "microservice-a"
             }
