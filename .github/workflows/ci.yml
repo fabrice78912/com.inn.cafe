@@ -72,8 +72,8 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: 'arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRRole'
-          aws-region: '${{ env.AWS_REGION }}'
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRRole
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Set environment tag with date
         id: set-env
@@ -140,8 +140,8 @@ jobs:
         if: ${{ github.event_name == 'pull_request' || needs.detect-branch.outputs.is-first-push == 'false' }}
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: '${{ env.PERSONAL_ACCESS_TOKEN }}'
-          repository: '${{ env.REPO_DEPLOY }}'
+          token: ${{ env.PERSONAL_ACCESS_TOKEN }}
+          repository: ${{ env.REPO_DEPLOY }}
           event-type: deploy
           client-payload: |
             {
