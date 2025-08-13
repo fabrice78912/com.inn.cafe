@@ -263,7 +263,7 @@ jobs:
 #        with:
 #          fetch-depth: 0
 #
-#      - name: Configure AWS credentials (OIDC)
+#      - name: Configure AWS credentials (OIDC) O
 #        uses: aws-actions/configure-aws-credentials@v4
 #        with:
 #          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRRole
