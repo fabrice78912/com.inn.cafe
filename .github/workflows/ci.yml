@@ -182,7 +182,7 @@ jobs:
 #          echo "ENV=$ENV" >> $GITHUB_ENV
 #          echo "TAG=$TAG" >> $GITHUB_ENV
       - name: Build Docker image
-        run: docker build -t $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }} .
+        run: docker build -t $ECR_REGISTRY/${{ env.REPO_NAME }}:$TAG .
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
@@ -190,7 +190,7 @@ jobs:
           mask-password: true
 
       - name: Push Docker image
-        run: docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
+        run: docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:$TAG
 
       - name: Trigger CD
         uses: peter-evans/repository-dispatch@v2
