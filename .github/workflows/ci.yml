@@ -67,44 +67,31 @@ jobs:
           DATE=$(date +%Y%m%d-%H%M%S)
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BASE="${{ github.base_ref }}"
-            case "$BASE" in
-              dev)
-                TAG="feature-dev-${SHA}-${DATE}"
-                ENV="feature"
-                ;;
-              rc-*)
-                TAG="feature-staging-${SHA}-${DATE}"
-                ENV="staging"
-                ;;
-              main)
-                TAG="feature-prod-${SHA}-${DATE}"
-                ENV="prod"
-                ;;
-              *)
-                TAG="feature-${BASE}-${SHA}-${DATE}"
-                ENV="feature"
-                ;;
-            esac
+            if [[ "$BASE" == "dev" ]]; then
+              TAG="feature-dev-${SHA}-${DATE}"
+              ENV="feature"
+            elif [[ "$BASE" == rc-* ]]; then
+              TAG="feature-staging-${SHA}-${DATE}"
+              ENV="staging"
+            elif [[ "$BASE" == "main" ]]; then
+              TAG="feature-prod-${SHA}-${DATE}"
+              ENV="prod"
+            else
+              TAG="feature-${BASE}-${SHA}-${DATE}"
+              ENV="feature"
+            fi
           else
             BRANCH="${{ github.ref }}"
-            case "$BRANCH" in
-              refs/heads/main)
-                TAG="prod-${SHA}-${DATE}"
-                ENV="prod"
-                ;;
-              refs/heads/dev)
-                TAG="dev-${SHA}-${DATE}"
-                ENV="dev"
-                ;;
-              refs/heads/rc-*)
-                TAG="staging-${SHA}-${DATE}"
-                ENV="staging"
-                ;;
-              *)
-                TAG="unknown-${SHA}-${DATE}"
-                ENV="unknown"
-                ;;
-            esac
+            if [[ "$BRANCH" == "refs/heads/main" ]]; then
+              TAG="prod-${SHA}-${DATE}"
+              ENV="prod"
+            elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
+              TAG="dev-${SHA}-${DATE}"
+              ENV="dev"
+            else
+              TAG="unknown-${SHA}-${DATE}"
+              ENV="unknown"
+            fi 
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "env=$ENV" >> $GITHUB_OUTPUT
