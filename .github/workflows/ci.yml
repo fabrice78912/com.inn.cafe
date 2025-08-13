@@ -88,9 +88,6 @@ jobs:
             elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
               TAG="dev-${SHA}-${DATE}"
               ENV="dev"
-#            elif [[ "$BRANCH" =~ ^refs/heads/rc- ]]; then
-#              TAG="staging-${SHA}-${DATE}"
-#              ENV="staging"
             else
               TAG="unknown-${SHA}-${DATE}"
               ENV="unknown"
