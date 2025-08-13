@@ -85,7 +85,7 @@ jobs:
             if [[ "$BRANCH" == "refs/heads/main" ]]; then
               TAG="prod-${SHA}-${DATE}"
               ENV="prod"
-            elif [[ "$BRANCH" == "=refs/heads/dev" ]]; then
+            elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
               TAG="dev-${SHA}-${DATE}"
               ENV="dev"
             elif [[ "$BRANCH" == refs/heads/rc-* ]]; then
