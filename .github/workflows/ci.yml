@@ -16,15 +16,14 @@ permissions:
   id-token: write
   contents: read
 env:
-  AWS_REGION: '${{ secrets.AWS_REGION }}'
-  AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID }}'
-  SONAR_TOKEN: '${{ secrets.SONAR_TOKEN }}'
-  ECR_REPO: '${{ secrets.ECR_REPO }}'
-  PERSONAL_ACCESS_TOKEN: '${{ secrets.PERSONAL_ACCESS_TOKEN }}'
-  REPO_DEPLOY: '${{ secrets.REPO_DEPLOY }}'
-  ECR_REGISTRY: >-
-    ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION}}.amazonaws.com
-  REPO_NAME: '${{ secrets.REPO_NAME }}'
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  ECR_REPO: ${{ secrets.ECR_REPO }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION}}.amazonaws.com
+  REPO_NAME: ${{ secrets.REPO_NAME }}
 jobs:
   detect-branch:
     runs-on: ubuntu-latest
