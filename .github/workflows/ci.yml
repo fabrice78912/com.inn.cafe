@@ -4,7 +4,7 @@ on:
   push:
     branches: ['**']        # Toutes les branches
   pull_request:
-    branches: ['**']        # Toutes les branches aussi
+    branches: [main, dev, 'rc-*']        # Toutes les branches aussi
 
 permissions:
   id-token: write
@@ -17,7 +17,7 @@ env:
   ECR_REPO: ${{ secrets.ECR_REPO }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REPO_DEPLOY: ${{ secrets.REPO_DEPLOY }}
-  ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'dev' && 'dev' || 'feature' }}
+#  ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'dev' && 'dev' || 'feature' }}
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
   REPO_NAME: ${{ secrets.REPO_NAME }}
 
@@ -85,10 +85,10 @@ jobs:
             if [[ "$BRANCH" == "refs/heads/main" ]]; then
               TAG="prod-${SHA}-${DATE}"
               ENV="prod"
-            elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
+            elif [[ "$BRANCH" == "=refs/heads/dev" ]]; then
               TAG="dev-${SHA}-${DATE}"
               ENV="dev"
-            elif [[ "$BRANCH" == "refs/heads/rc-*" ]]; then
+            elif [[ "$BRANCH" == refs/heads/rc-* ]]; then
               TAG="staging-${SHA}-${DATE}"
               ENV="staging"
             else
