@@ -88,8 +88,8 @@ jobs:
               TAG="dev-${SHA}-${DATE}"
               ENV="dev"
             else
-              TAG="unknown-${SHA}-${DATE}"
-              ENV="unknown"
+              TAG="fix-bug-pro-${SHA}-${DATE}"
+              ENV="prod"
             fi 
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
@@ -100,8 +100,6 @@ jobs:
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
-        with:
-          mask-password: true
 
       - name: Push Docker image
         run: docker push $ECR_REGISTRY/${{ env.REPO_NAME }}:${{ steps.tag.outputs.tag }}
