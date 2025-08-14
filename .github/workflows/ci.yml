@@ -83,45 +83,6 @@ jobs:
           DATE=$(date +%Y%m%d-%H%M%S)
           ENV="feature"
           TAG="feature-${SHA}-${DATE}"
-
-#          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-#            BASE="${GITHUB_BASE_REF}"
-#            if [[ "$BASE" == "dev" ]]; then
-#              ENV="feature"
-#              TAG="feature-${SHA}-${DATE}"
-#            elif [[ "$BASE" == rc-* ]]; then
-#              ENV="staging"
-#              TAG="staging-${SHA}-${DATE}"
-#            elif [[ "$BASE" == "main" ]]; then
-#              ENV="prod"
-#              TAG="prod-${SHA}-${DATE}"
-#            else
-#              ENV="dev"
-#              TAG="dev-${SHA}-${DATE}"
-#            fi
-#          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
-#            REF="${GITHUB_REF}"
-#            if [[ "$REF" == "refs/heads/dev" ]]; then
-#              ENV="dev"
-#              TAG="dev-${SHA}-${DATE}"
-#            elif [[ "$REF" == refs/heads/rc-* ]]; then
-#              ENV="staging"
-#              TAG="staging-${SHA}-${DATE}"
-#            elif [[ "$REF" == "refs/heads/main" ]]; then
-#              ENV="prod"
-#              TAG="prod-${SHA}-${DATE}"
-#            elif [[ "$REF" == refs/heads/feature/* ]]; then
-#              ENV="dev"
-#              TAG="dev-${SHA}-${DATE}"
-#            else
-#              ENV="unknown"
-#              TAG="unknown-${SHA}-${DATE}"
-#            fi
-#          else
-#            ENV="dev"
-#            TAG="dev-${SHA}-${DATE}"
-#          fi
-
           echo "ENV=$ENV" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
 
