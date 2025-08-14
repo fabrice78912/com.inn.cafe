@@ -102,13 +102,13 @@ jobs:
             if [[ "$REF" == "refs/heads/dev" ]]; then
               ENV="dev"
               TAG="dev-${SHA}-${DATE}"
-            elif [[ "$REF" == refs/heads/rc-* ]]; then
+            elif [[ "$REF" == refs/heads/rc ]]; then
               ENV="staging"
               TAG="staging-${SHA}-${DATE}"
             elif [[ "$REF" == "refs/heads/main" ]]; then
               ENV="prod"
               TAG="prod-${SHA}-${DATE}"
-            elif [[ "$REF" == refs/heads/feature/* ]]; then
+            elif [[ "$REF" == refs/heads/feature ]]; then
               ENV="dev"
               TAG="dev-${SHA}-${DATE}"
             else
