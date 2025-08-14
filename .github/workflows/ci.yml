@@ -1,4 +1,4 @@
-name: 'CI - Build, Scan, Push and Trigger CD'
+name: 'CI - Build, Scan, Push and Trigger CD.'
 'on':
   push:
     branches:
