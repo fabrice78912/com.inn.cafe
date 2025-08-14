@@ -8,12 +8,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -54,12 +57,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedMethods(List.of("DELETE", "GET", "POST"));
-        corsConfiguration.setAllowedOrigins(List.of(frontEndUrl));
+
+        // Autoriser tous les frontends
+        corsConfiguration.setAllowedOrigins(List.of("*"));
+
+        // Méthodes HTTP autorisées
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // Headers autorisés
+        corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        // Headers exposés côté frontend
+        corsConfiguration.setExposedHeaders(List.of("Authorization"));
         http.cors().configurationSource(request -> new CorsConfiguration(corsConfiguration).applyPermitDefaultValues())
                 .and()
                 .csrf().disable()
                 .authorizeRequests()
+                .requestMatchers(request -> isWebDavRequest(request.getMethod())).denyAll()
                 .antMatchers("/user/login", "/user/signUp", "/user/forgotPassword","/swagger-ui/*","/v3/api-docs/**")
                 .permitAll()
                 .anyRequest()
@@ -70,6 +84,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+
+
+    private boolean isWebDavRequest(String method) {
+        if (method == null) {
+            return false; // on ignore les requêtes sans méthode
+        }
+
+        return switch (method) {
+            case "PROPFIND", "PROPPATCH", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK" -> true;
+            default -> false;
+        };
+    }
+
+
+    @Bean
+    public HttpFirewall allowSemicolonHttpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        firewall.setAllowSemicolon(true);
+        return firewall;
+    }
+
+    // Exemple : appliquer le firewall
+    @Override
+    public void configure(WebSecurity web) {
+        web.httpFirewall(allowSemicolonHttpFirewall());
     }
 
 
