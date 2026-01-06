@@ -58,7 +58,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         corsConfiguration.setAllowedOrigins(List.of(frontEndUrl));
         http.cors().configurationSource(request -> new CorsConfiguration(corsConfiguration).applyPermitDefaultValues())
                 .and()
-                .csrf().disable()
+                .csrf()
+                    .ignoringAntMatchers("/user/login", "/user/signUp", "/user/forgotPassword", "/swagger-ui/*", "/v3/api-docs/**")
+                .and()
                 .authorizeRequests()
                 .antMatchers("/user/login", "/user/signUp", "/user/forgotPassword","/swagger-ui/*","/v3/api-docs/**")
                 .permitAll()
